@@ -551,3 +551,23 @@ body.dark-mode .chart-wrapper {
 #charts-container canvas {
   max-height: 300px;
 }
+
+.chart-wrapper-full {
+  width: 100%;
+  height: 400px;
+  margin: 20px 0;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+body.dark-mode .chart-wrapper-full {
+  background: rgba(20, 30, 45, 0.9);
+  border: 1px solid rgba(93, 173, 226, 0.3);
+}
+
+#charts-container canvas {
+  width: 100% !important;
+  height: 350px !important;
+}

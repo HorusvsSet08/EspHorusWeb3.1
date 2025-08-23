@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🔗 Tu enlace CSV publicado
   const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
 
-  // Verificar que los scripts estén cargados
+  // Verificar que los scripts estén bien cargados
   if (typeof Papa === 'undefined') {
     console.error("❌ ERROR: PapaParse.js no se ha cargado.");
     return;

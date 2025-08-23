@@ -1,11 +1,11 @@
-// js/main.js - Controlador central de Horus
+// js/main.js - Controlador ÚNICO para todo el proyecto Horus
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
 
   if (!body) return;
 
-  // === Cargar tema guardado (claro/oscuro) ===
+  // === Cargar tema guardado ===
   const isDark = localStorage.getItem("darkMode") === "true";
   body.classList.toggle("dark-mode", isDark);
   body.classList.toggle("light-mode", !isDark);
@@ -20,11 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateVisualEffects(isDarkMode) {
-    // Eliminar efectos anteriores
     document.querySelector('.particles')?.remove();
     document.querySelector('.rain')?.remove();
 
-    // Añadir efecto según el tema
     if (isDarkMode) {
       createRain();
     } else {
@@ -64,20 +62,117 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(rain);
   }
 
-  // === Switch de Galahad (modo claro/oscuro) ===
+  // === Switch de Galahad ===
   if (checkbox) {
     checkbox.addEventListener("change", (e) => {
       setTheme(e.target.checked);
     });
   }
 
-  // Aplicar tema al cargar
+  // === Inicializar efectos al cargar ===
   setTheme(isDark);
 
-  // === Conexión MQTT (solo en mqtt.html) ===
+  // === Solo en analisis.html: cargar gráficos ===
+  if (window.location.pathname.includes("analisis.html")) {
+    if (typeof Papa === 'undefined') {
+      console.error("❌ ERROR: PapaParse.js no se cargó.");
+      return;
+    }
+    if (typeof Chart === 'undefined') {
+      console.error("❌ ERROR: chart.js no se cargó.");
+      return;
+    }
+
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
+
+    Papa.parse(sheetURL, {
+      download: true,
+      header: false,
+      skipEmptyLines: true,
+      complete: function(results) {
+        try {
+          const data = results.data
+            .slice(1)
+            .map(row => ({
+              fecha: row[0]?.split(' ')[0] || '',
+              temp: parseFloat(row[2]),
+              hum: parseFloat(row[3]),
+              pres: parseFloat(row[4]),
+              pm25: parseFloat(row[6]),
+              pm10: parseFloat(row[7]),
+              wind: parseFloat(row[8]),
+              gas: parseFloat(row[10]),
+              lluvia: parseFloat(row[11])
+            }))
+            .filter(row => row.fecha && !isNaN(row.temp));
+
+          if (data.length === 0) {
+            console.warn("⚠️ No se encontraron datos válidos.");
+            return;
+          }
+
+          // Filtrar última semana
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
+
+          if (lastWeekData.length === 0) {
+            console.warn("⚠️ No hay datos de la última semana.");
+            return;
+          }
+
+          // Crear gráficas grandes
+          createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
+          createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
+          createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56');
+          createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0');
+          createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF');
+          createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD');
+          createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C');
+
+        } catch (error) {
+          console.error("❌ Error procesando datos:", error);
+        }
+      },
+      error: function(error) {
+        console.error("❌ Error al cargar CSV:", error);
+      }
+    });
+
+    function createChart(canvasId, label, data, field, color) {
+      const ctx = document.getElementById(canvasId)?.getContext('2d');
+      if (!ctx) return;
+
+      new Chart(ctx, {
+        type: 'line',
+         {
+          labels: data.map(d => d.fecha),
+          datasets: [{
+            label: label,
+             data.map(d => d[field] || null),
+            borderColor: color,
+            backgroundColor: color + '40',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Fecha' } },
+            y: { beginAtZero: false, title: { display: true, text: label } }
+          }
+        }
+      });
+    }
+  }
+
+  // === Solo en mqtt.html: conectar a MQTT ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
-      console.error("❌ ERROR: mqtt.js no se ha cargado.");
+      console.error("❌ mqtt.js no se ha cargado.");
       return;
     }
 
@@ -142,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     client.on("message", (topic, payload) => {
       const value = payload.toString().trim();
-      if (!value || value === "NaN") return;
+      if (!value) return;
 
       const key = Object.keys(topics).find(k => topics[k] === topic);
       const el = elements[key];
@@ -170,100 +265,4 @@ document.addEventListener("DOMContentLoaded", () => {
       connectionStatus.classList.remove('connected');
     });
   }
-
-  // === Gráficos semanales (solo en analisis.html) ===
-  if (window.location.pathname.includes("analisis.html")) {
-    if (typeof Papa === 'undefined') {
-      console.error("❌ ERROR: PapaParse.js no se cargó.");
-      return;
-    }
-    if (typeof Chart === 'undefined') {
-      console.error("❌ ERROR: chart.js no se cargó.");
-      return;
-    }
-
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
-
-    Papa.parse(sheetURL, {
-      download: true,
-      header: false,
-      skipEmptyLines: true,
-      complete: function(results) {
-        try {
-          const data = results.data
-            .slice(1)
-            .map(row => ({
-              fecha: row[0]?.split(' ')[0] || '',
-              temp: parseFloat(row[2]),
-              hum: parseFloat(row[3]),
-              pres: parseFloat(row[4]),
-              pm25: parseFloat(row[6]),
-              pm10: parseFloat(row[7]),
-              wind: parseFloat(row[8]),
-              gas: parseFloat(row[10]),
-              lluvia: parseFloat(row[11])
-            }))
-            .filter(row => row.fecha && !isNaN(row.temp));
-
-          if (data.length === 0) {
-            console.warn("⚠️ No hay datos válidos para mostrar.");
-            return;
-          }
-
-          const oneWeekAgo = new Date();
-          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-          const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
-
-          if (lastWeekData.length === 0) {
-            console.warn("⚠️ No hay datos de los últimos 7 días.");
-            return;
-          }
-
-          createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
-          createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
-          createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56');
-          createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0');
-          createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF');
-          createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD');
-          createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C');
-
-        } catch (error) {
-          console.error("❌ Error procesando datos:", error);
-        }
-      },
-      error: function(error) {
-        console.error("❌ Error al cargar CSV:", error);
-      }
-    });
-
-function createChart(canvasId, label, data, field, color) {
-  const ctx = document.getElementById(canvasId).getContext('2d');
-
-  // Configuración del gráfico
-  const config = {
-    type: 'line',
-     {
-      labels: data.map(d => d.fecha),
-      datasets: [{
-        label: label,
-         data.map(d => d[field] || null),
-        borderColor: color,
-        backgroundColor: color + '40',
-        borderWidth: 3,
-        tension: 0.3,
-        pointRadius: 3
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: { title: { display: true, text: 'Fecha' } },
-        y: { beginAtZero: false, title: { display: true, text: label } }
-      }
-    }
-  };
-
-  // Crear el gráfico
-  new Chart(ctx, config);
-}
+});

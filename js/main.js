@@ -69,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // === Inicializar efectos ===
   setTheme(isDark);
 
   // === Solo en mqtt.html: conectar a MQTT ===
@@ -127,7 +128,13 @@ document.addEventListener("DOMContentLoaded", () => {
       statusText.textContent = "Conectado";
       connectionStatus.classList.add('connected');
       Object.values(topics).forEach(topic => {
-        client.subscribe(topic);
+        client.subscribe(topic, (err) => {
+          if (err) {
+            console.warn("⚠️ No se pudo suscribir a", topic);
+          } else {
+            console.log("📌 Suscrito a:", topic);
+          }
+        });
       });
     });
 
@@ -181,20 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
       skipEmptyLines: true,
       complete: function(results) {
         try {
-          const data = results.data
-            .slice(1)
-            .map(row => ({
-              fecha: row[0]?.split(' ')[0] || '',
-              temp: parseFloat(row[2]),
-              hum: parseFloat(row[3]),
-              pres: parseFloat(row[4]),
-              pm25: parseFloat(row[6]),
-              pm10: parseFloat(row[7]),
-              wind: parseFloat(row[8]),
-              gas: parseFloat(row[10]),
-              lluvia: parseFloat(row[11])
-            }))
-            .filter(row => row.fecha && !isNaN(row.temp));
+          const data = results.data.slice(1).map(row => ({
+            fecha: row[0]?.split(' ')[0] || '',
+            temp: parseFloat(row[2]),
+            hum: parseFloat(row[3]),
+            pres: parseFloat(row[4]),
+            pm25: parseFloat(row[6]),
+            pm10: parseFloat(row[7]),
+            wind: parseFloat(row[8]),
+            gas: parseFloat(row[10]),
+            lluvia: parseFloat(row[11])
+          })).filter(row => row.fecha && !isNaN(row.temp));
 
           if (data.length === 0) return;
 
@@ -225,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = document.getElementById(canvasId).getContext('2d');
       new Chart(ctx, {
         type: 'line',
-         {
+         {  // ← Corregido: se agregó ''
           labels: data.map(d => d.fecha),
           datasets: [{
             label: label,

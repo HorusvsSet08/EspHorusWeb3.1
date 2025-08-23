@@ -205,32 +205,29 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    function createChart(canvasId, label, data, field, color) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-          labels: data.map(d => d.fecha),
-          datasets: [{
-            label: label,
-             data.map(d => d[field] || null),
-            borderColor: color,
-            backgroundColor: color + '40',
-            borderWidth: 3,
-            tension: 0.3,
-            pointRadius: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { title: { display: true, text: 'Fecha' } },
-            y: { beginAtZero: false, title: { display: true, text: label } }
-          }
-        }
-      });
+function createChart(canvasId, label, data, field, color) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+     {  // ← CORRECTO: ahora tiene ''
+      labels: data.map(d => d.fecha),
+      datasets: [{
+        label: label,
+         data.map(d => d[field] || null),  // ← CORRECTO: ahora tiene ''
+        borderColor: color,
+        backgroundColor: color + '40',
+        borderWidth: 3,
+        tension: 0.3,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Fecha' } },
+        y: { beginAtZero: false, title: { display: true, text: label } }
+      }
     }
-  }
-});
-
-
+  });
+}

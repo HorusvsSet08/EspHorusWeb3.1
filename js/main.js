@@ -134,11 +134,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       new Chart(ctx, {
         type: 'line',
-        data: {
+        data: {  // <-- Added 'data:'
           labels: data.map(d => d.fecha),
           datasets: [{
             label: label,
-             data.map(d => d[field] || null),
+            data: data.map(d => d[field] || null), // <-- Fixed: added 'data:'
             borderColor: color,
             backgroundColor: color + '40',
             borderWidth: 3,

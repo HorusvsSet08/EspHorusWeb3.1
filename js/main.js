@@ -1,4 +1,4 @@
-// js/main.js - Controlador central
+// js/main.js - Controlador central: tema, efectos, MQTT y gráficos
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
@@ -62,16 +62,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(rain);
   }
 
-  // === Switch ===
+  // === Switch de tema ===
   if (checkbox) {
     checkbox.addEventListener("change", (e) => {
       setTheme(e.target.checked);
     });
   }
 
+  // === Inicializar efectos ===
   setTheme(isDark);
 
-  // === Solo en mqtt.html: conectar a MQTT ===
+  // === Solo en mqtt.html: conectar y suscribirse a MQTT ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
       console.error("❌ ERROR: mqtt.js no se ha cargado.");
@@ -127,7 +128,13 @@ document.addEventListener("DOMContentLoaded", () => {
       statusText.textContent = "Conectado";
       connectionStatus.classList.add('connected');
       Object.values(topics).forEach(topic => {
-        client.subscribe(topic);
+        client.subscribe(topic, (err) => {
+          if (err) {
+            console.warn("⚠️ No se pudo suscribir a", topic);
+          } else {
+            console.log("📌 Suscrito a:", topic);
+          }
+        });
       });
     });
 

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Análisis Semanal - Horus</title>
   <link rel="stylesheet" href="../css/style.css" />
-  <!-- Carga librerías locales -->
   <script src="../js/PapaParse.js"></script>
   <script src="../js/chart.js"></script>
 </head>
@@ -24,7 +23,6 @@
         </a>
       </div>
 
-      <!-- Switch de Galahad -->
       <div class="nav-right">
         <label class="theme-switch">
           <input type="checkbox" class="theme-switch__checkbox">
@@ -50,11 +48,11 @@
     </div>
   </nav>
 
-  <!-- Estado de conexión MQTT -->
+  <!-- Estado de conexión -->
   <div class="connection-status-small">
     <span class="status-dot"></span>
-    <span class="status-text">Desconectado</span>
-    <div class="last-update">última: nunca</div>
+    <span class="status-text">Conectado</span>
+    <div class="last-update">última: ahora</div>
   </div>
 
   <div class="container">
@@ -82,9 +80,6 @@
       <div class="chart-wrapper-full">
         <canvas id="rainChart"></canvas>
       </div>
-      <div class="chart-wrapper-full">
-        <canvas id="gasChart"></canvas>
-      </div>
     </main>
 
     <footer>
@@ -92,25 +87,9 @@
     </footer>
   </div>
 
+  <script src="../js/main.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const statusText = document.querySelector('.status-text');
-      const lastUpdate = document.querySelector('.last-update');
-      let lastDataTime = null;
-
-      // Simular conexión (opcional: conectar a MQTT real)
-      statusText.textContent = "Conectado";
-      document.querySelector('.connection-status-small').classList.add('connected');
-      lastDataTime = Date.now();
-
-      const updateLastUpdate = () => {
-        if (!lastDataTime) return;
-        const diff = Math.floor((Date.now() - lastDataTime) / 1000);
-        lastUpdate.textContent = `última: hace ${diff}s`;
-      };
-      setInterval(updateLastUpdate, 1000);
-
-      // URL del CSV publicado
       const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
 
       Papa.parse(sheetURL, {
@@ -119,45 +98,36 @@
         skipEmptyLines: true,
         complete: function(results) {
           try {
-            const data = results.data
-              .slice(1)
-              .map(row => ({
-                fecha: row[0]?.split(' ')[0] || '',
-                temp: parseFloat(row[2]),
-                hum: parseFloat(row[3]),
-                pres: parseFloat(row[4]),
-                pm25: parseFloat(row[6]),
-                pm10: parseFloat(row[7]),
-                wind: parseFloat(row[8]),
-                gas: parseFloat(row[10]),
-                lluvia: parseFloat(row[11])
-              }))
-              .filter(row => row.fecha && !isNaN(row.temp));
+            const data = results.data.slice(1).map(row => ({
+              fecha: row[0]?.split(' ')[0] || '',
+              temp: parseFloat(row[2]),
+              hum: parseFloat(row[3]),
+              pres: parseFloat(row[4]),
+              pm25: parseFloat(row[6]),
+              pm10: parseFloat(row[7]),
+              wind: parseFloat(row[8]),
+              gas: parseFloat(row[10]),
+              lluvia: parseFloat(row[11])
+            })).filter(row => row.fecha && !isNaN(row.temp));
 
             if (data.length === 0) return;
 
-            // Filtrar última semana
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
             const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
 
             if (lastWeekData.length === 0) return;
 
-            // Crear gráficas grandes
             createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
             createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
             createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56');
             createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0');
             createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF');
             createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD');
-            createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C');
 
           } catch (error) {
-            console.error("❌ Error procesando datos:", error);
+            console.error("❌ Error:", error);
           }
-        },
-        error: function(error) {
-          console.error("❌ Error al cargar CSV:", error);
         }
       });
 
@@ -173,36 +143,18 @@
               borderColor: color,
               backgroundColor: color + '40',
               borderWidth: 3,
-              pointRadius: 3,
-              tension: 0.3
+              tension: 0.3,
+              pointRadius: 3
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
             scales: {
               x: { title: { display: true, text: 'Fecha' } },
               y: { beginAtZero: false, title: { display: true, text: label } }
             }
           }
-        });
-      }
-
-      // === Modo claro/oscuro (igual que el resto) ===
-      const body = document.body;
-      const checkbox = document.querySelector(".theme-switch__checkbox");
-      const isDark = localStorage.getItem("darkMode") === "true";
-
-      body.classList.toggle("dark-mode", isDark);
-      body.classList.toggle("light-mode", !isDark);
-      if (checkbox) checkbox.checked = isDark;
-
-      if (checkbox) {
-        checkbox.addEventListener("change", (e) => {
-          body.classList.toggle("dark-mode", e.target.checked);
-          body.classList.toggle("light-mode", !e.target.checked);
-          localStorage.setItem("darkMode", e.target.checked);
         });
       }
     });

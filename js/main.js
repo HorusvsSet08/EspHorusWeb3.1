@@ -237,51 +237,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 function createChart(canvasId, label, data, field, color) {
-  // Obtener el contexto del canvas
   const ctx = document.getElementById(canvasId).getContext('2d');
 
-  // Preparar los datos para el gráfico
-  const chartData = {
-    labels: data.map(row => row.fecha),
-    datasets: [
-      {
+  // Configuración del gráfico
+  const config = {
+    type: 'line',
+     {
+      labels: data.map(d => d.fecha),
+      datasets: [{
         label: label,
-        data: data.map(row => row[field] || null),
+         data.map(d => d[field] || null),
         borderColor: color,
         backgroundColor: color + '40',
         borderWidth: 3,
         tension: 0.3,
         pointRadius: 3
-      }
-    ]
-  };
-
-  // Opciones del gráfico
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Fecha'
-        }
-      },
-      y: {
-        beginAtZero: false,
-        title: {
-          display: true,
-          text: label
-        }
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Fecha' } },
+        y: { beginAtZero: false, title: { display: true, text: label } }
       }
     }
-  };
-
-  // Configuración final
-  const config = {
-    type: 'line',
-    data: chartData,
-    options: chartOptions
   };
 
   // Crear el gráfico

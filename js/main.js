@@ -1,4 +1,4 @@
-// js/main.js - Controlador central: tema, efectos, MQTT y gráficos
+// js/main.js - Controlador central
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(rain);
   }
 
-  // === Switch de tema ===
+  // === Switch ===
   if (checkbox) {
     checkbox.addEventListener("change", (e) => {
       setTheme(e.target.checked);
@@ -72,27 +72,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // === Inicializar efectos ===
   setTheme(isDark);
 
-  // === Solo en mqtt.html: conectar y suscribirse a MQTT ===
+  // === MQTT solo en mqtt.html ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
-      console.error("❌ ERROR: mqtt.js no se ha cargado.");
+      console.error("❌ mqtt.js no cargado");
       return;
     }
-
-    const connectionStatus = document.querySelector('.connection-status-small');
-    const statusText = connectionStatus?.querySelector('.status-text');
-    const lastUpdate = connectionStatus?.querySelector('.last-update');
-    let lastDataTime = null;
-
-    const updateLastUpdate = () => {
-      if (!lastDataTime) {
-        lastUpdate.textContent = 'última: nunca';
-        return;
-      }
-      const diff = Math.floor((Date.now() - lastDataTime) / 1000);
-      lastUpdate.textContent = `última: hace ${diff}s`;
-    };
-    setInterval(updateLastUpdate, 1000);
 
     const broker = "wss://broker.hivemq.com:8884/mqtt";
     const client = mqtt.connect(broker, {
@@ -124,18 +109,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     client.on("connect", () => {
-      console.log("✅ Conectado a broker.hivemq.com:8884");
-      statusText.textContent = "Conectado";
-      connectionStatus.classList.add('connected');
-      Object.values(topics).forEach(topic => {
-        client.subscribe(topic, (err) => {
-          if (err) {
-            console.warn("⚠️ No se pudo suscribir a", topic);
-          } else {
-            console.log("📌 Suscrito a:", topic);
-          }
-        });
-      });
+      console.log("✅ Conectado a broker");
+      Object.values(topics).forEach(topic => client.subscribe(topic));
     });
 
     client.on("message", (topic, payload) => {
@@ -153,19 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (key === "gas") el.textContent = `${value} kΩ`;
       else if (key === "lluvia") el.textContent = `${value} mm`;
       else el.textContent = value;
-
-      lastDataTime = Date.now();
-    });
-
-    client.on("error", (err) => {
-      console.error("❌ Error MQTT:", err.message || err);
-      statusText.textContent = "Error";
-      connectionStatus.classList.remove('connected');
-    });
-
-    client.on("close", () => {
-      statusText.textContent = "Desconectado";
-      connectionStatus.classList.remove('connected');
     });
   }
 });

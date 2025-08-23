@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Datos en Vivo - Horus</title>
   <link rel="stylesheet" href="../css/style.css" />
-  <script src="../js/mqtt.js"></script>
-  <script src="../js/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 </head>
 <body class="light-mode">
   <nav class="nav">
     <div class="nav-container">
-      <!-- Botones -->
       <div class="nav-buttons">
         <a href="../index.html" class="nav-btn">
           <span class="nav-icon">🏠</span> Inicio
@@ -19,11 +17,12 @@
         <a href="mqtt.html" class="nav-btn active">
           <span class="nav-icon">📡</span> Datos en Vivo
         </a>
+        <a href="analisis.html" class="nav-btn">
+          <span class="nav-icon">📊</span> Análisis
+        </a>
       </div>
 
-      <!-- Switch de Galahad -->
       <div class="nav-right">
-        <!-- From Uiverse.io by Galahhad -->
         <label class="theme-switch">
           <input type="checkbox" class="theme-switch__checkbox">
           <div class="theme-switch__container">
@@ -48,28 +47,59 @@
     </div>
   </nav>
 
-  <!-- Tarjetas de datos -->
   <div class="container">
     <header>
-      <h1>📡 Datos en Tiempo Real</h1>
+      <h1>📡 Datos en Vivo</h1>
     </header>
 
-    <main id="weather-data">
-      <div class="data-card"><span>🌡️ Temperatura</span><strong id="temp">-- °C</strong></div>
-      <div class="data-card"><span>💧 Humedad</span><strong id="hum">-- %</strong></div>
-      <div class="data-card"><span>🔽 Presión</span><strong id="press">-- hPa</strong></div>
-      <div class="data-card"><span>⛰️ Altitud</span><strong id="alt">-- m</strong></div>
-      <div class="data-card"><span>🌫️ PM2.5</span><strong id="pm25">-- µg/m³</strong></div>
-      <div class="data-card"><span>🌫️ PM10</span><strong id="pm10">-- µg/m³</strong></div>
-      <div class="data-card"><span>🌀 Viento</span><strong id="wind">-- km/h</strong></div>
-      <div class="data-card"><span>🧭 Dirección</span><strong id="windDir">-- °</strong></div>
-      <div class="data-card"><span>⛽ Gas</span><strong id="gas">-- kΩ</strong></div>
-      <div class="data-card"><span>🌧️ Lluvia</span><strong id="lluvia">-- mm</strong></div>
-    </main>
+    <div id="weather-data">
+      <div class="data-card">
+        <span>🌡️ Temperatura</span>
+        <strong id="temp">-- °C</strong>
+      </div>
+      <div class="data-card">
+        <span>💧 Humedad</span>
+        <strong id="hum">-- %</strong>
+      </div>
+      <div class="data-card">
+        <span>🔽 Presión</span>
+        <strong id="press">-- hPa</strong>
+      </div>
+      <div class="data-card">
+        <span>📍 Altitud</span>
+        <strong id="alt">-- m</strong>
+      </div>
+      <div class="data-card">
+        <span>🌫️ PM2.5</span>
+        <strong id="pm25">-- µg/m³</strong>
+      </div>
+      <div class="data-card">
+        <span>🌫️ PM10</span>
+        <strong id="pm10">-- µg/m³</strong>
+      </div>
+      <div class="data-card">
+        <span>💨 Viento</span>
+        <strong id="wind">-- km/h</strong>
+      </div>
+      <div class="data-card">
+        <span>🧭 Dirección</span>
+        <strong id="windDir">-- °</strong>
+      </div>
+      <div class="data-card">
+        <span>🔥 Gas</span>
+        <strong id="gas">-- kΩ</strong>
+      </div>
+      <div class="data-card">
+        <span>🌧️ Lluvia</span>
+        <strong id="lluvia">-- mm</strong>
+      </div>
+    </div>
 
     <footer>
-      <p>Conectado vía MQTT a <code>broker.hivemq.com</code></p>
+      <p>Estación Horus • Datos en tiempo real vía MQTT</p>
     </footer>
   </div>
+
+  <script src="../js/main.js"></script>
 </body>
 </html>

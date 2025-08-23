@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Datos en Vivo - Horus</title>
   <link rel="stylesheet" href="../css/style.css" />
+  <!-- Cargar MQTT.js desde CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 </head>
 <body class="light-mode">
@@ -22,6 +23,7 @@
         </a>
       </div>
 
+      <!-- Switch de Galahad -->
       <div class="nav-right">
         <label class="theme-switch">
           <input type="checkbox" class="theme-switch__checkbox">
@@ -47,9 +49,17 @@
     </div>
   </nav>
 
+  <!-- Estado de conexión MQTT -->
+  <div class="connection-status-small">
+    <span class="status-dot"></span>
+    <span class="status-text">Desconectado</span>
+    <div class="last-update">última: nunca</div>
+  </div>
+
   <div class="container">
     <header>
-      <h1>📡 Datos en Vivo</h1>
+      <h1>📡 Datos en Vivo - Estación Horus</h1>
+      <p>Monitoreo ambiental en tiempo real</p>
     </header>
 
     <div id="weather-data">
@@ -66,7 +76,7 @@
         <strong id="press">-- hPa</strong>
       </div>
       <div class="data-card">
-        <span>📍 Altitud</span>
+        <span>⛰️ Altitud</span>
         <strong id="alt">-- m</strong>
       </div>
       <div class="data-card">
@@ -86,7 +96,7 @@
         <strong id="windDir">-- °</strong>
       </div>
       <div class="data-card">
-        <span>🔥 Gas</span>
+        <span>⛽ Gas</span>
         <strong id="gas">-- kΩ</strong>
       </div>
       <div class="data-card">
@@ -96,10 +106,11 @@
     </div>
 
     <footer>
-      <p>Estación Horus • Datos en tiempo real vía MQTT</p>
+      <p>Estación Horus • Diseño y desarrollo por <strong>Tu Nombre</strong></p>
     </footer>
   </div>
 
+  <!-- Cargar main.js (controla tema, efectos y switch) -->
   <script src="../js/main.js"></script>
 </body>
 </html>

@@ -571,3 +571,32 @@ body.dark-mode .chart-wrapper-full {
   width: 100% !important;
   height: 350px !important;
 }
+
+/* === Gráficos 100% de ancho, uno debajo del otro === */
+.chart-wrapper-full {
+  width: 100%;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+body.dark-mode .chart-wrapper-full {
+  background: rgba(20, 30, 45, 0.9);
+  border: 1px solid rgba(93, 173, 226, 0.3);
+}
+
+#charts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 2rem 0;
+}
+
+#charts-container canvas {
+  width: 100% !important;
+  height: 350px !important;
+}

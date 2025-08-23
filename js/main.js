@@ -5,13 +5,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!body) return;
 
-  // === Cargar tema guardado (claro/oscuro) ===
+  // === Cargar tema guardado ===
   const isDark = localStorage.getItem("darkMode") === "true";
   body.classList.toggle("dark-mode", isDark);
   body.classList.toggle("light-mode", !isDark);
   if (checkbox) checkbox.checked = isDark;
 
-  // === Aplicar tema y efectos visuales ===
+  // === Aplicar tema y efectos ===
   function setTheme(isDarkMode) {
     body.classList.toggle("dark-mode", isDarkMode);
     body.classList.toggle("light-mode", !isDarkMode);
@@ -62,17 +62,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(rain);
   }
 
-  // === Switch de Galahad (modo claro/oscuro) ===
+  // === Switch de Galahad ===
   if (checkbox) {
     checkbox.addEventListener("change", (e) => {
       setTheme(e.target.checked);
     });
   }
 
-  // === Inicializar efectos al cargar ===
   setTheme(isDark);
 
-  // === Conexión MQTT (solo en mqtt.html) ===
+  // === Conexión MQTT (mqtt.html) ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
       console.error("❌ ERROR: mqtt.js no se ha cargado.");
@@ -127,15 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("✅ Conectado a broker.hivemq.com:8884");
       statusText.textContent = "Conectado";
       connectionStatus.classList.add('connected');
-      Object.values(topics).forEach(topic => {
-        client.subscribe(topic, (err) => {
-          if (err) {
-            console.warn("⚠️ No se pudo suscribir a", topic);
-          } else {
-            console.log("📌 Suscrito a:", topic);
-          }
-        });
-      });
+      Object.values(topics).forEach(topic => client.subscribe(topic));
     });
 
     client.on("message", (topic, payload) => {
@@ -156,20 +147,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       lastDataTime = Date.now();
     });
-
-    client.on("error", (err) => {
-      console.error("❌ Error MQTT:", err.message || err);
-      statusText.textContent = "Error";
-      connectionStatus.classList.remove('connected');
-    });
-
-    client.on("close", () => {
-      statusText.textContent = "Desconectado";
-      connectionStatus.classList.remove('connected');
-    });
   }
 
-  // === Gráficos semanales (solo en analisis.html) ===
+  // === Gráficos semanales (analisis.html) ===
   if (window.location.pathname.includes("analisis.html")) {
     if (typeof Papa === 'undefined') {
       console.error("❌ ERROR: PapaParse.js no se cargó.");
@@ -229,11 +209,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = document.getElementById(canvasId).getContext('2d');
       new Chart(ctx, {
         type: 'line',
-         {  // ← CORRECTO: ahora tiene ''
+         {  // ← CORRECTO: tiene ''
           labels: data.map(d => d.fecha),
           datasets: [{
             label: label,
-             data.map(d => d[field] || null),  // ← CORRECTO: ahora tiene ''
+             data.map(d => d[field] || null),  // ← CORRECTO: tiene ''
             borderColor: color,
             backgroundColor: color + '40',
             borderWidth: 3,

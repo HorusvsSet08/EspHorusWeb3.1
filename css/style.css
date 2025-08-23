@@ -525,3 +525,29 @@ body.dark-mode footer code {
   #weather-data { grid-template-columns: 1fr; }
   .container { padding: 1rem; }
 }
+
+/* === Gráficas === */
+.chart-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+body.dark-mode .chart-wrapper {
+  background: rgba(20, 30, 45, 0.9);
+  border: 1px solid rgba(93, 173, 226, 0.3);
+}
+
+#charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+#charts-container canvas {
+  max-height: 300px;
+}

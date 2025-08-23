@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("📊 analisis.js: Cargando datos desde Google Sheets...");
 
   // 🔗 Reemplaza con tu enlace CSV publicado
-  const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/pub?gid=0&single=true&output=csv";
+  const sheetURL = "https://docs.google.com/spreadsheets/d/1k1EBYptoYHVg982yqQdPF9Glt0PJAUZWMW0J-z4ps-4/edit?gid=0#gid=0/pub?gid=0&single=true&output=csv";
 
   // Verificar que los scripts estén cargados
   if (typeof Papa === 'undefined') {

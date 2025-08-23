@@ -1,4 +1,4 @@
-// js/main.js - Solo controla tema, switch y efectos
+// js/main.js - Controlador de tema, switch y efectos
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");

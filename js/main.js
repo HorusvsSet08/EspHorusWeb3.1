@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = document.getElementById(canvasId).getContext('2d');
       new Chart(ctx, {
         type: 'line',
-         {  // ← CORRECTO: tiene espacio después del {
+         {
           labels: data.map(d => d.fecha),
           datasets: [{
             label: label,
@@ -233,3 +233,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 });
+

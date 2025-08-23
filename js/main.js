@@ -1,4 +1,4 @@
-// js/main.js - Controlador central de Horus
+// js/main.js - Corregido y funcional
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setTheme(isDark);
 
-  // === Conexión MQTT (mqtt.html) ===
+  // === Conexión MQTT (solo en mqtt.html) ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
       console.error("❌ ERROR: mqtt.js no se ha cargado.");
@@ -205,30 +205,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-function createChart(canvasId, label, data, field, color) {
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-     "{"  // ← CORRECTO: ahora tiene ''
-      labels: data.map(d => d.fecha),
-      datasets: [{
-        label: label,
-         data.map(d => d[field] || null),  // ← CORRECTO: ahora tiene ''
-        borderColor: color,
-        backgroundColor: color + '40',
-        borderWidth: 3,
-        tension: 0.3,
-        pointRadius: 3
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: { title: { display: true, text: 'Fecha' } },
-        y: { beginAtZero: false, title: { display: true, text: label } }
-      }
+    function createChart(canvasId, label, data, field, color) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+         {  // ← CORRECTO: ahora tiene ''
+          labels: data.map(d => d.fecha),
+          datasets: [{
+            label: label,
+             data.map(d => d[field] || null),  // ← CORRECTO: ahora tiene ''
+            borderColor: color,
+            backgroundColor: color + '40',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Fecha' } },
+            y: { beginAtZero: false, title: { display: true, text: label } }
+          }
+        }
+      });
     }
-  });
-}
-
+  }
+});

@@ -209,7 +209,7 @@ function createChart(canvasId, label, data, field, color) {
   const ctx = document.getElementById(canvasId).getContext('2d');
   new Chart(ctx, {
     type: 'line',
-     {  // ← CORRECTO: ahora tiene ''
+     "{"  // ← CORRECTO: ahora tiene ''
       labels: data.map(d => d.fecha),
       datasets: [{
         label: label,
@@ -231,3 +231,4 @@ function createChart(canvasId, label, data, field, color) {
     }
   });
 }
+

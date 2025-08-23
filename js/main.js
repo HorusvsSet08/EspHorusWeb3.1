@@ -1,17 +1,17 @@
-// js/main.js - Controlador central
+// js/main.js - Controlador central de Horus
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
 
   if (!body) return;
 
-  // === Cargar tema guardado ===
+  // === Cargar tema guardado (claro/oscuro) ===
   const isDark = localStorage.getItem("darkMode") === "true";
   body.classList.toggle("dark-mode", isDark);
   body.classList.toggle("light-mode", !isDark);
   if (checkbox) checkbox.checked = isDark;
 
-  // === Aplicar tema y efectos ===
+  // === Aplicar tema y efectos visuales ===
   function setTheme(isDarkMode) {
     body.classList.toggle("dark-mode", isDarkMode);
     body.classList.toggle("light-mode", !isDarkMode);
@@ -62,17 +62,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(rain);
   }
 
-  // === Switch ===
+  // === Switch de Galahad (modo claro/oscuro) ===
   if (checkbox) {
     checkbox.addEventListener("change", (e) => {
       setTheme(e.target.checked);
     });
   }
 
-  // === Inicializar efectos ===
+  // === Inicializar efectos al cargar ===
   setTheme(isDark);
 
-  // === Solo en mqtt.html: conectar a MQTT ===
+  // === Conexión MQTT (solo en mqtt.html) ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
       console.error("❌ ERROR: mqtt.js no se ha cargado.");
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === Solo en analisis.html: cargar gráficos ===
+  // === Gráficos semanales (solo en analisis.html) ===
   if (window.location.pathname.includes("analisis.html")) {
     if (typeof Papa === 'undefined') {
       console.error("❌ ERROR: PapaParse.js no se cargó.");
@@ -229,11 +229,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = document.getElementById(canvasId).getContext('2d');
       new Chart(ctx, {
         type: 'line',
-         {  // ← Corregido: se agregó ''
+         {  // ← CORRECTO: ahora tiene ''
           labels: data.map(d => d.fecha),
           datasets: [{
             label: label,
-             data.map(d => d[field] || null),
+             data.map(d => d[field] || null),  // ← CORRECTO: ahora tiene ''
             borderColor: color,
             backgroundColor: color + '40',
             borderWidth: 3,

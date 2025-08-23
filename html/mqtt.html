@@ -113,110 +113,106 @@
   <script src="../js/main.js"></script>
 
   <!-- Script de MQTT -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const statusText = document.querySelector('.status-text');
-      const lastUpdate = document.querySelector('.last-update');
-      let lastDataTime = null;
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const statusText = document.querySelector('.status-text');
+    const lastUpdate = document.querySelector('.last-update');
+    let lastDataTime = null;
 
-      // Actualiza el "última actualización"
-      const updateLastUpdate = () => {
-        if (!lastDataTime) return;
-        const diff = Math.floor((Date.now() - lastDataTime) / 1000);
-        lastUpdate.textContent = `última: hace ${diff}s`;
-      };
-      setInterval(updateLastUpdate, 1000);
+    const updateLastUpdate = () => {
+      if (!lastDataTime) return;
+      const diff = Math.floor((Date.now() - lastDataTime) / 1000);
+      lastUpdate.textContent = `última: hace ${diff}s`;
+    };
+    setInterval(updateLastUpdate, 1000);
 
-      // === Conexión MQTT ===
-      const broker = "wss://broker.hivemq.com:8884/mqtt";
-      const client = mqtt.connect(broker, {
-        clientId: "webClient_" + Math.random().toString(16).substr(2, 8),
-        protocolVersion: 4,
-        clean: true,
-        connectTimeout: 10000,
-        reconnectPeriod: 3000
-      });
+    // === Conexión MQTT ===
+    const broker = "wss://broker.hivemq.com:8884/mqtt";
+    const client = mqtt.connect(broker, {
+      clientId: "webClient_" + Math.random().toString(16).substr(2, 8),
+      protocolVersion: 4,
+      clean: true,
+      connectTimeout: 10000,
+      reconnectPeriod: 3000
+    });
 
-      // Tópicos correctos
-      const topics = [
-        "horus/vvb/temperatura",
-        "horus/vvb/humedad",
-        "horus/vvb/presion",
-        "horus/vvb/altitud",
-        "horus/vvb/pm25",
-        "horus/vvb/pm10",
-        "horus/vvb/wind_speed",
-        "horus/vvb/wind_direction",
-        "horus/vvb/gas",
-        "horus/vvb/lluvia"
-      ];
+    // === SUSCRIBIRSE A TODOS LOS TÓPICOS HORUS ===
+    client.on("connect", () => {
+      console.log("✅ Conectado al broker");
+      statusText.textContent = "Conectado";
+      document.querySelector('.connection-status-small').classList.add('connected');
 
-      // Mapeo de tópicos a elementos
-      const elementMap = {
-        "horus/vvb/temperatura": document.getElementById("temp"),
-        "horus/vvb/humedad": document.getElementById("hum"),
-        "horus/vvb/presion": document.getElementById("press"),
-        "horus/vvb/altitud": document.getElementById("alt"),
-        "horus/vvb/pm25": document.getElementById("pm25"),
-        "horus/vvb/pm10": document.getElementById("pm10"),
-        "horus/vvb/wind_speed": document.getElementById("wind"),
-        "horus/vvb/wind_direction": document.getElementById("windDir"),
-        "horus/vvb/gas": document.getElementById("gas"),
-        "horus/vvb/lluvia": document.getElementById("lluvia")
-      };
-
-      // Cuando se conecta
-      client.on("connect", () => {
-        console.log("✅ Conectado a broker.hivemq.com:8884");
-        statusText.textContent = "Conectado";
-        document.querySelector('.connection-status-small').classList.add('connected');
-
-        // Suscribirse a todos los tópicos
-        topics.forEach(topic => {
-          client.subscribe(topic, (err) => {
-            if (err) {
-              console.warn("⚠️ Error al suscribirse a", topic);
-            } else {
-              console.log("✅ Suscrito a:", topic);
-            }
-          });
-        });
-      });
-
-      // Cuando llega un mensaje
-      client.on("message", (topic, payload) => {
-        const value = payload.toString().trim();
-        if (!value || !elementMap[topic]) return;
-
-        const el = elementMap[topic];
-        const unit = {
-          "horus/vvb/temperatura": "°C",
-          "horus/vvb/presion": "hPa",
-          "horus/vvb/wind_speed": "km/h",
-          "horus/vvb/wind_direction": "°",
-          "horus/vvb/gas": "kΩ",
-          "horus/vvb/lluvia": "mm"
-        }[topic] || "";
-
-        el.textContent = `${value} ${unit}`.trim();
-
-        // Actualiza la hora de última recepción
-        lastDataTime = Date.now();
-      });
-
-      // Errores
-      client.on("error", (err) => {
-        console.error("❌ Error MQTT:", err);
-        statusText.textContent = "Error";
-        document.querySelector('.connection-status-small').classList.remove('connected');
-      });
-
-      // Desconexión
-      client.on("close", () => {
-        statusText.textContent = "Desconectado";
-        document.querySelector('.connection-status-small').classList.remove('connected');
+      // Suscríbete a TODO lo que empiece con "horus/"
+      client.subscribe("horus/#", (err) => {
+        if (err) {
+          console.error("❌ Error al suscribirse a horus/#");
+        } else {
+          console.log("🔍 Suscrito a horus/# (todos los tópicos)");
+        }
       });
     });
-  </script>
+
+    // === MANEJAR CUALQUIER MENSAJE ===
+    client.on("message", (topic, payload) => {
+      const value = payload.toString().trim();
+      if (!value) return;
+
+      // ✅ LOG para ver TODO lo que llega
+      console.log("📩 Tópico:", topic);
+      console.log("📦 Valor:", value);
+
+      // Actualiza el tiempo de última recepción
+      lastDataTime = Date.now();
+
+      // === Mapeo de tópicos a IDs (ajusta según tu ESP) ===
+      const map = {
+        "horus/vvb/temperatura": "temp",
+        "horus/vvb/humedad": "hum",
+        "horus/vvb/presion": "press",
+        "horus/vvb/altitud": "alt",
+        "horus/vvb/pm25": "pm25",
+        "horus/vvb/pm10": "pm10",
+        "horus/vvb/wind_speed": "wind",
+        "horus/vvb/wind_direction": "windDir",
+        "horus/vvb/gas": "gas",
+        "horus/vvb/lluvia": "lluvia"
+      };
+
+      const id = map[topic];
+      if (!id) {
+        console.warn("⚠️ Tópico no mapeado:", topic);
+        return;
+      }
+
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      // Unidades
+      const unit = {
+        temp: "°C",
+        press: "hPa",
+        wind: "km/h",
+        windDir: "°",
+        gas: "kΩ",
+        lluvia: "mm"
+      }[id] || "";
+
+      el.textContent = `${value} ${unit}`.trim();
+    });
+
+    client.on("error", (err) => {
+      console.error("❌ Error MQTT:", err);
+      statusText.textContent = "Error";
+      document.querySelector('.connection-status-small').classList.remove('connected');
+    });
+
+    client.on("close", () => {
+      statusText.textContent = "Desconectado";
+      document.querySelector('.connection-status-small').classList.remove('connected');
+    });
+  });
+</script>
+  
 </body>
 </html>
+

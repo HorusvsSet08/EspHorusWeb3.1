@@ -1,17 +1,17 @@
-// js/main.js - Corregido y funcional
+// js/main.js - Controlador central de Horus
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
 
   if (!body) return;
 
-  // === Cargar tema guardado ===
+  // === Cargar tema guardado (claro/oscuro) ===
   const isDark = localStorage.getItem("darkMode") === "true";
   body.classList.toggle("dark-mode", isDark);
   body.classList.toggle("light-mode", !isDark);
   if (checkbox) checkbox.checked = isDark;
 
-  // === Aplicar tema y efectos ===
+  // === Aplicar tema y efectos visuales ===
   function setTheme(isDarkMode) {
     body.classList.toggle("dark-mode", isDarkMode);
     body.classList.toggle("light-mode", !isDarkMode);
@@ -20,9 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateVisualEffects(isDarkMode) {
+    // Eliminar efectos anteriores
     document.querySelector('.particles')?.remove();
     document.querySelector('.rain')?.remove();
 
+    // Añadir efecto según el tema
     if (isDarkMode) {
       createRain();
     } else {
@@ -62,13 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(rain);
   }
 
-  // === Switch de Galahad ===
+  // === Switch de Galahad (modo claro/oscuro) ===
   if (checkbox) {
     checkbox.addEventListener("change", (e) => {
       setTheme(e.target.checked);
     });
   }
 
+  // Aplicar tema al cargar
   setTheme(isDark);
 
   // === Conexión MQTT (solo en mqtt.html) ===
@@ -126,12 +129,20 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("✅ Conectado a broker.hivemq.com:8884");
       statusText.textContent = "Conectado";
       connectionStatus.classList.add('connected');
-      Object.values(topics).forEach(topic => client.subscribe(topic));
+      Object.values(topics).forEach(topic => {
+        client.subscribe(topic, (err) => {
+          if (err) {
+            console.warn("⚠️ No se pudo suscribir a", topic);
+          } else {
+            console.log("📌 Suscrito a:", topic);
+          }
+        });
+      });
     });
 
     client.on("message", (topic, payload) => {
       const value = payload.toString().trim();
-      if (!value) return;
+      if (!value || value === "NaN") return;
 
       const key = Object.keys(topics).find(k => topics[k] === topic);
       const el = elements[key];
@@ -147,9 +158,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
       lastDataTime = Date.now();
     });
+
+    client.on("error", (err) => {
+      console.error("❌ Error MQTT:", err.message || err);
+      statusText.textContent = "Error";
+      connectionStatus.classList.remove('connected');
+    });
+
+    client.on("close", () => {
+      statusText.textContent = "Desconectado";
+      connectionStatus.classList.remove('connected');
+    });
   }
 
-  // === Gráficos semanales (analisis.html) ===
+  // === Gráficos semanales (solo en analisis.html) ===
   if (window.location.pathname.includes("analisis.html")) {
     if (typeof Papa === 'undefined') {
       console.error("❌ ERROR: PapaParse.js no se cargó.");
@@ -168,25 +190,34 @@ document.addEventListener("DOMContentLoaded", () => {
       skipEmptyLines: true,
       complete: function(results) {
         try {
-          const data = results.data.slice(1).map(row => ({
-            fecha: row[0]?.split(' ')[0] || '',
-            temp: parseFloat(row[2]),
-            hum: parseFloat(row[3]),
-            pres: parseFloat(row[4]),
-            pm25: parseFloat(row[6]),
-            pm10: parseFloat(row[7]),
-            wind: parseFloat(row[8]),
-            gas: parseFloat(row[10]),
-            lluvia: parseFloat(row[11])
-          })).filter(row => row.fecha && !isNaN(row.temp));
+          const data = results.data
+            .slice(1)
+            .map(row => ({
+              fecha: row[0]?.split(' ')[0] || '',
+              temp: parseFloat(row[2]),
+              hum: parseFloat(row[3]),
+              pres: parseFloat(row[4]),
+              pm25: parseFloat(row[6]),
+              pm10: parseFloat(row[7]),
+              wind: parseFloat(row[8]),
+              gas: parseFloat(row[10]),
+              lluvia: parseFloat(row[11])
+            }))
+            .filter(row => row.fecha && !isNaN(row.temp));
 
-          if (data.length === 0) return;
+          if (data.length === 0) {
+            console.warn("⚠️ No hay datos válidos para mostrar.");
+            return;
+          }
 
           const oneWeekAgo = new Date();
           oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
           const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
 
-          if (lastWeekData.length === 0) return;
+          if (lastWeekData.length === 0) {
+            console.warn("⚠️ No hay datos de los últimos 7 días.");
+            return;
+          }
 
           createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
           createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
@@ -209,11 +240,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = document.getElementById(canvasId).getContext('2d');
       new Chart(ctx, {
         type: 'line',
-         {  // ← CORRECTO: ahora tiene ''
+         {
           labels: data.map(d => d.fecha),
           datasets: [{
             label: label,
-             data.map(d => d[field] || null),  // ← CORRECTO: ahora tiene ''
+             data.map(d => d[field] || null),
             borderColor: color,
             backgroundColor: color + '40',
             borderWidth: 3,

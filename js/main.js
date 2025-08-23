@@ -1,4 +1,4 @@
-// js/main.js - Controlador ÚNICO para todo el proyecto
+// js/main.js - Controlador central
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   body.classList.toggle("light-mode", !isDark);
   if (checkbox) checkbox.checked = isDark;
 
-  // === Aplicar tema y efectos visuales ===
+  // === Aplicar tema y efectos ===
   function setTheme(isDarkMode) {
     body.classList.toggle("dark-mode", isDarkMode);
     body.classList.toggle("light-mode", !isDarkMode);
@@ -62,108 +62,36 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(rain);
   }
 
-  // === Switch de Galahad ===
+  // === Switch ===
   if (checkbox) {
     checkbox.addEventListener("change", (e) => {
       setTheme(e.target.checked);
     });
   }
 
-  // === Inicializar efectos al cargar ===
   setTheme(isDark);
 
-  // === Solo en analisis.html: cargar gráficos ===
-  if (window.location.pathname.includes("analisis.html")) {
-    if (typeof Papa === 'undefined') {
-      console.error("❌ ERROR: PapaParse.js no se cargó.");
-      return;
-    }
-    if (typeof Chart === 'undefined') {
-      console.error("❌ ERROR: chart.js no se cargó.");
-      return;
-    }
-
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
-
-    Papa.parse(sheetURL, {
-      download: true,
-      header: false,
-      skipEmptyLines: true,
-      complete: function(results) {
-        try {
-          const data = results.data.slice(1).map(row => ({
-            fecha: row[0]?.split(' ')[0] || '',
-            temp: parseFloat(row[2]),
-            hum: parseFloat(row[3]),
-            pres: parseFloat(row[4]),
-            pm25: parseFloat(row[6]),
-            pm10: parseFloat(row[7]),
-            wind: parseFloat(row[8]),
-            gas: parseFloat(row[10]),
-            lluvia: parseFloat(row[11])
-          })).filter(row => row.fecha && !isNaN(row.temp));
-
-          if (data.length === 0) return;
-
-          const oneWeekAgo = new Date();
-          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-          const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
-
-          if (lastWeekData.length === 0) return;
-
-          createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
-          createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
-          createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56');
-          createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0');
-          createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF');
-          createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD');
-          createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C');
-
-        } catch (error) {
-          console.error("❌ Error procesando datos:", error);
-        }
-      },
-      error: function(error) {
-        console.error("❌ Error al cargar CSV:", error);
-      }
-    });
-
-    function createChart(canvasId, label, data, field, color) {
-      const ctx = document.getElementById(canvasId)?.getContext('2d');
-      if (!ctx) return;
-
-      new Chart(ctx, {
-        type: 'line',
-        data: {  // <-- Added 'data:'
-          labels: data.map(d => d.fecha),
-          datasets: [{
-            label: label,
-            data: data.map(d => d[field] || null), // <-- Fixed: added 'data:'
-            borderColor: color,
-            backgroundColor: color + '40',
-            borderWidth: 3,
-            tension: 0.3,
-            pointRadius: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { title: { display: true, text: 'Fecha' } },
-            y: { beginAtZero: false, title: { display: true, text: label } }
-          }
-        }
-      });
-    }
-  }
-
-  // === Solo en mqtt.html: conectar MQTT ===
+  // === Solo en mqtt.html: conectar a MQTT ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
-      console.error("❌ mqtt.js no cargado");
+      console.error("❌ ERROR: mqtt.js no se ha cargado.");
       return;
     }
+
+    const connectionStatus = document.querySelector('.connection-status-small');
+    const statusText = connectionStatus?.querySelector('.status-text');
+    const lastUpdate = connectionStatus?.querySelector('.last-update');
+    let lastDataTime = null;
+
+    const updateLastUpdate = () => {
+      if (!lastDataTime) {
+        lastUpdate.textContent = 'última: nunca';
+        return;
+      }
+      const diff = Math.floor((Date.now() - lastDataTime) / 1000);
+      lastUpdate.textContent = `última: hace ${diff}s`;
+    };
+    setInterval(updateLastUpdate, 1000);
 
     const broker = "wss://broker.hivemq.com:8884/mqtt";
     const client = mqtt.connect(broker, {
@@ -195,8 +123,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     client.on("connect", () => {
-      console.log("✅ Conectado a broker");
-      Object.values(topics).forEach(topic => client.subscribe(topic));
+      console.log("✅ Conectado a broker.hivemq.com:8884");
+      statusText.textContent = "Conectado";
+      connectionStatus.classList.add('connected');
+      Object.values(topics).forEach(topic => {
+        client.subscribe(topic);
+      });
     });
 
     client.on("message", (topic, payload) => {
@@ -214,6 +146,106 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (key === "gas") el.textContent = `${value} kΩ`;
       else if (key === "lluvia") el.textContent = `${value} mm`;
       else el.textContent = value;
+
+      lastDataTime = Date.now();
     });
+
+    client.on("error", (err) => {
+      console.error("❌ Error MQTT:", err.message || err);
+      statusText.textContent = "Error";
+      connectionStatus.classList.remove('connected');
+    });
+
+    client.on("close", () => {
+      statusText.textContent = "Desconectado";
+      connectionStatus.classList.remove('connected');
+    });
+  }
+
+  // === Solo en analisis.html: cargar gráficos ===
+  if (window.location.pathname.includes("analisis.html")) {
+    if (typeof Papa === 'undefined') {
+      console.error("❌ ERROR: PapaParse.js no se cargó.");
+      return;
+    }
+    if (typeof Chart === 'undefined') {
+      console.error("❌ ERROR: chart.js no se cargó.");
+      return;
+    }
+
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
+
+    Papa.parse(sheetURL, {
+      download: true,
+      header: false,
+      skipEmptyLines: true,
+      complete: function(results) {
+        try {
+          const data = results.data
+            .slice(1)
+            .map(row => ({
+              fecha: row[0]?.split(' ')[0] || '',
+              temp: parseFloat(row[2]),
+              hum: parseFloat(row[3]),
+              pres: parseFloat(row[4]),
+              pm25: parseFloat(row[6]),
+              pm10: parseFloat(row[7]),
+              wind: parseFloat(row[8]),
+              gas: parseFloat(row[10]),
+              lluvia: parseFloat(row[11])
+            }))
+            .filter(row => row.fecha && !isNaN(row.temp));
+
+          if (data.length === 0) return;
+
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
+
+          if (lastWeekData.length === 0) return;
+
+          createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
+          createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
+          createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56');
+          createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0');
+          createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF');
+          createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD');
+          createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C');
+
+        } catch (error) {
+          console.error("❌ Error procesando datos:", error);
+        }
+      },
+      error: function(error) {
+        console.error("❌ Error al cargar CSV:", error);
+      }
+    });
+
+    function createChart(canvasId, label, data, field, color) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+         {
+          labels: data.map(d => d.fecha),
+          datasets: [{
+            label: label,
+             data.map(d => d[field] || null),
+            borderColor: color,
+            backgroundColor: color + '40',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Fecha' } },
+            y: { beginAtZero: false, title: { display: true, text: label } }
+          }
+        }
+      });
+    }
   }
 });

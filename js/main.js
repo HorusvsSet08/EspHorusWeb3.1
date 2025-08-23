@@ -1,54 +1,21 @@
+// js/main.js - Controlador central del tema y efectos
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🟢 main.js: Página cargada e inicializando...");
-
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
 
-  if (!body) {
-    console.error("❌ ERROR FATAL: No se encontró <body>");
-    return;
-  }
+  if (!body) return;
 
   // === Cargar tema guardado ===
   const isDark = localStorage.getItem("darkMode") === "true";
   body.classList.toggle("dark-mode", isDark);
   body.classList.toggle("light-mode", !isDark);
 
+  // === Sincronizar switch ===
   if (checkbox) {
     checkbox.checked = isDark;
   }
 
-  // === Estado de conexión (solo en mqtt.html) ===
-  let connectionStatus = null;
-  let statusText = null;
-  let lastUpdate = null;
-  let lastDataTime = null;
-
-  if (window.location.pathname.includes("mqtt.html")) {
-    connectionStatus = document.createElement('div');
-    connectionStatus.className = 'connection-status-small';
-    connectionStatus.innerHTML = `
-      <span class="status-dot"></span>
-      <span class="status-text">Desconectado</span>
-      <div class="last-update">última: nunca</div>
-    `;
-    document.querySelector('header')?.after(connectionStatus);
-
-    statusText = connectionStatus.querySelector('.status-text');
-    lastUpdate = connectionStatus.querySelector('.last-update');
-
-    const updateLastUpdate = () => {
-      if (!lastDataTime) {
-        lastUpdate.textContent = 'última: nunca';
-        return;
-      }
-      const diff = Math.floor((Date.now() - lastDataTime) / 1000);
-      lastUpdate.textContent = `última: hace ${diff}s`;
-    };
-    setInterval(updateLastUpdate, 1000);
-  }
-
-  // === Aplicar tema ===
+  // === Aplicar tema y efectos ===
   function setTheme(isDarkMode) {
     body.classList.toggle("dark-mode", isDarkMode);
     body.classList.toggle("light-mode", !isDarkMode);
@@ -70,13 +37,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function createParticles() {
     const particles = document.createElement('div');
-    particles.classList.add('particles');
-    for (let i = 0; i < 60; i++) {
+    particles.className = 'particles';
+    for (let i = 0; i < 50; i++) {
       const dot = document.createElement('div');
-      dot.classList.add('particle');
+      dot.className = 'particle';
       dot.style.left = Math.random() * 100 + 'vw';
       dot.style.top = Math.random() * 100 + 'vh';
-      dot.style.opacity = Math.random() * 0.5 + 0.3;
+      dot.style.opacity = Math.random() * 0.6 + 0.3;
       dot.style.animationDuration = (Math.random() * 10 + 5) + 's';
       dot.style.setProperty('--delay', Math.random());
       particles.appendChild(dot);
@@ -86,10 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function createRain() {
     const rain = document.createElement('div');
-    rain.classList.add('rain');
+    rain.className = 'rain';
     for (let i = 0; i < 40; i++) {
       const drop = document.createElement('div');
-      drop.classList.add('raindrop');
+      drop.className = 'raindrop';
       drop.style.left = Math.random() * 100 + 'vw';
       drop.style.animationDuration = (Math.random() * 2 + 1) + 's';
       drop.style.opacity = Math.random() * 0.6 + 0.4;
@@ -107,10 +74,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Inicializar efectos
+  // === Inicializar efectos al cargar ===
   setTheme(isDark);
 
-  // === Conexión MQTT (solo en mqtt.html) ===
+  // === Solo en mqtt.html: conectar MQTT ===
   if (window.location.pathname.includes("mqtt.html")) {
     if (typeof mqtt === 'undefined') {
       console.error("❌ ERROR: mqtt.js no se ha cargado.");
@@ -148,16 +115,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     client.on("connect", () => {
       console.log("✅ Conectado a broker.hivemq.com:8884");
-      statusText.textContent = "Conectado";
-      connectionStatus.classList.add('connected');
       Object.values(topics).forEach(topic => {
-        client.subscribe(topic, (err) => {
-          if (err) {
-            console.error("❌ Error al suscribirse a:", topic);
-          } else {
-            console.log("📌 Suscrito a:", topic);
-          }
-        });
+        client.subscribe(topic);
       });
     });
 
@@ -176,19 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (key === "gas") el.textContent = `${value} kΩ`;
       else if (key === "lluvia") el.textContent = `${value} mm`;
       else el.textContent = value;
-
-      lastDataTime = Date.now();
-    });
-
-    client.on("error", (err) => {
-      console.error("❌ Error MQTT:", err.message || err);
-      statusText.textContent = "Error";
-      connectionStatus.classList.remove('connected');
-    });
-
-    client.on("close", () => {
-      statusText.textContent = "Desconectado";
-      connectionStatus.classList.remove('connected');
     });
   }
 });

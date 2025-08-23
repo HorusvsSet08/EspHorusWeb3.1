@@ -209,11 +209,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = document.getElementById(canvasId).getContext('2d');
       new Chart(ctx, {
         type: 'line',
-         {  // ← CORRECTO: tiene ''
+         {  // ✅ CORRECTO: tiene ''
           labels: data.map(d => d.fecha),
           datasets: [{
             label: label,
-             data.map(d => d[field] || null),  // ← CORRECTO: tiene ''
+             data: data.map(d => d[field] || null),  // ✅ CORRECTO: ahora tiene 'data:'
             borderColor: color,
             backgroundColor: color + '40',
             borderWidth: 3,

@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Análisis Semanal - Horus</title>
   <link rel="stylesheet" href="../css/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <!-- Scripts locales -->
+  <script src="../js/PapaParse.js"></script>
+  <script src="../js/chart.js"></script>
 </head>
 <body class="light-mode">
   <nav class="nav">
@@ -16,7 +17,7 @@
         <a href="../index.html" class="nav-btn">
           <span class="nav-icon">🏠</span> Inicio
         </a>
-        <a href="../html/mqtt.html" class="nav-btn">
+        <a href="mqtt.html" class="nav-btn">
           <span class="nav-icon">📡</span> Datos en Vivo
         </a>
         <a href="analisis.html" class="nav-btn active">
@@ -26,6 +27,7 @@
 
       <!-- Switch de Galahad -->
       <div class="nav-right">
+        <!-- From Uiverse.io by Galahhad -->
         <label class="theme-switch">
           <input type="checkbox" class="theme-switch__checkbox">
           <div class="theme-switch__container">
@@ -53,7 +55,7 @@
   <div class="container">
     <header>
       <h1>📊 Análisis Semanal de Datos</h1>
-      <p>Gráficas de los últimos 7 días desde Google Sheets</p>
+      <p>Últimos 7 días de mediciones de la estación Horus</p>
     </header>
 
     <main id="charts-container">
@@ -70,15 +72,21 @@
         <canvas id="pm25Chart"></canvas>
       </div>
       <div class="chart-wrapper">
+        <canvas id="pm10Chart"></canvas>
+      </div>
+      <div class="chart-wrapper">
         <canvas id="windChart"></canvas>
       </div>
       <div class="chart-wrapper">
         <canvas id="rainChart"></canvas>
       </div>
+      <div class="chart-wrapper">
+        <canvas id="gasChart"></canvas>
+      </div>
     </main>
 
     <footer>
-      <p>Análisis generado desde <code>datos_horus.csv</code> en Google Sheets</p>
+      <p>Datos obtenidos de <a href="https://docs.google.com/spreadsheets/d/1k1EBYptoYHVg982yqQdPF9Glt0PJAUZWMW0J-z4ps-4/edit" target="_blank">Google Sheets</a></p>
     </footer>
   </div>
 

@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Estación Meteorológica Horus</title>
+  <title>Horus - Estación Meteorológica</title>
   <link rel="stylesheet" href="css/style.css" />
-  <script src="js/mqtt.js"></script>
-  <script src="js/main.js"></script>
 </head>
 <body class="light-mode">
   <nav class="nav">
     <div class="nav-container">
-      <!-- Botones -->
       <div class="nav-buttons">
         <a href="index.html" class="nav-btn active">
           <span class="nav-icon">🏠</span> Inicio
@@ -19,11 +16,12 @@
         <a href="html/mqtt.html" class="nav-btn">
           <span class="nav-icon">📡</span> Datos en Vivo
         </a>
+        <a href="html/analisis.html" class="nav-btn">
+          <span class="nav-icon">📊</span> Análisis
+        </a>
       </div>
 
-      <!-- Switch de Galahad -->
       <div class="nav-right">
-        <!-- From Uiverse.io by Galahhad -->
         <label class="theme-switch">
           <input type="checkbox" class="theme-switch__checkbox">
           <div class="theme-switch__container">
@@ -50,38 +48,20 @@
 
   <div class="container">
     <header>
-      <h1>🌦️ Estación Meteorológica Horus</h1>
+      <h1>Horus - Estación Meteorológica</h1>
+      <p>Monitorización ambiental en tiempo real</p>
     </header>
 
     <main>
-      <section class="intro">
-        <h2>¿Qué es una estación meteorológica?</h2>
-        <p>
-          Una <strong>estación meteorológica</strong> mide condiciones ambientales como temperatura, humedad, presión, viento, lluvia y calidad del aire. 
-          La estación <strong>Horus</strong> es un sistema IoT que envía datos en tiempo real usando <strong>MQTT</strong>.
-        </p>
-      </section>
-
-      <section class="features">
-        <h2>📊 Sensores que monitorea</h2>
-        <ul>
-          <li>🌡️ Temperatura y humedad</li>
-          <li>🔽 Presión atmosférica y altitud</li>
-          <li>🌀 Velocidad y dirección del viento</li>
-          <li>🌧️ Precipitación (lluvia)</li>
-          <li>🌫️ Calidad del aire (PM2.5, PM10)</li>
-          <li>⛽ Niveles de gases</li>
-        </ul>
-      </section>
-
-      <section class="cta">
-        <p>👉 <a href="html/mqtt.html"><strong>Ver datos en tiempo real</strong></a></p>
-      </section>
+      <p>Esta estación mide temperatura, humedad, presión, calidad del aire, viento y precipitaciones.</p>
+      <p>Accede a los datos en tiempo real o al análisis semanal.</p>
     </main>
 
     <footer>
-      <p>Estación Horus • Diseñada con ❤️ para monitoreo ambiental</p>
+      <p>Diseño y desarrollo por <strong>Tu Nombre</strong></p>
     </footer>
   </div>
+
+  <script src="js/main.js"></script>
 </body>
 </html>

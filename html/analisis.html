@@ -53,7 +53,7 @@
   <div class="container">
     <header>
       <h1>📊 Análisis de Datos - Estación Horus</h1>
-      <p>Gráfico de temperatura y humedad desde Google Sheets</p>
+      <p>Gráfico de temperatura, humedad y presión desde Google Sheets</p>
     </header>
 
     <div class="chart-wrapper-full">
@@ -71,7 +71,7 @@
   <!-- Script del gráfico -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // URL del CSV de Google Sheets (reemplaza con tu enlace real)
+      // URL del CSV de Google Sheets
       const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
 
       Papa.parse(sheetURL, {
@@ -84,7 +84,8 @@
             const data = results.data.slice(1).map(row => ({
               fecha: row[0]?.split(' ')[1] || '', // solo la hora
               temp: parseFloat(row[1]),
-              hum: parseFloat(row[2])
+              hum: parseFloat(row[2]),
+              pres: parseFloat(row[3])
             })).filter(row => row.fecha && !isNaN(row.temp));
 
             if (data.length === 0) {
@@ -116,6 +117,15 @@
                      recentData.map(d => d.hum),
                     borderColor: '#36A2EB',
                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 3
+                  },
+                  {
+                    label: 'Presión (hPa)',
+                     recentData.map(d => d.pres),
+                    borderColor: '#FFCE56',
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
                     borderWidth: 3,
                     tension: 0.3,
                     pointRadius: 3

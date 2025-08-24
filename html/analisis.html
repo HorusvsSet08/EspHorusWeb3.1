@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Análisis Semanal - Horus</title>
+  <title>Análisis - Horus</title>
   <link rel="stylesheet" href="../css/style.css" />
-  <!-- Carga librerías locales -->
+  <!-- Librerías locales -->
   <script src="../js/PapaParse.js"></script>
   <script src="../js/chart.js"></script>
 </head>
@@ -50,54 +50,28 @@
     </div>
   </nav>
 
-  <!-- Estado de conexión -->
-  <div class="connection-status-small">
-    <span class="status-dot"></span>
-    <span class="status-text">Conectado</span>
-    <div class="last-update">última: ahora</div>
-  </div>
-
   <div class="container">
     <header>
-      <h1>📊 Análisis Semanal de Datos</h1>
-      <p>Últimos 7 días de mediciones de la estación Horus</p>
+      <h1>📊 Análisis de Datos - Estación Horus</h1>
+      <p>Gráfico de temperatura y humedad desde Google Sheets</p>
     </header>
 
-    <main id="charts-container">
-      <div class="chart-wrapper-full">
-        <canvas id="tempChart"></canvas>
-      </div>
-      <div class="chart-wrapper-full">
-        <canvas id="humChart"></canvas>
-      </div>
-      <div class="chart-wrapper-full">
-        <canvas id="pressChart"></canvas>
-      </div>
-      <div class="chart-wrapper-full">
-        <canvas id="pm25Chart"></canvas>
-      </div>
-      <div class="chart-wrapper-full">
-        <canvas id="windChart"></canvas>
-      </div>
-      <div class="chart-wrapper-full">
-        <canvas id="rainChart"></canvas>
-      </div>
-      <div class="chart-wrapper-full">
-        <canvas id="gasChart"></canvas>
-      </div>
-    </main>
+    <div class="chart-wrapper-full">
+      <canvas id="mainChart"></canvas>
+    </div>
 
     <footer>
       <p>Datos obtenidos de <a href="https://docs.google.com/spreadsheets/d/1k1EBYptoYHVg982yqQdPF9Glt0PJAUZWMW0J-z4ps-4/edit" target="_blank">Google Sheets</a></p>
     </footer>
   </div>
 
-  <!-- Carga main.js primero (controla tema y switch) -->
+  <!-- Carga main.js para tema y switch -->
   <script src="../js/main.js"></script>
 
-  <!-- Script de análisis (como estaba antes) -->
+  <!-- Script del gráfico -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // URL del CSV de Google Sheets (reemplaza con tu enlace real)
       const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
 
       Papa.parse(sheetURL, {
@@ -106,68 +80,70 @@
         skipEmptyLines: true,
         complete: function(results) {
           try {
+            // Procesar datos
             const data = results.data.slice(1).map(row => ({
-              fecha: row[0]?.split(' ')[0] || '',
-              temp: parseFloat(row[2]),
-              hum: parseFloat(row[3]),
-              pres: parseFloat(row[4]),
-              pm25: parseFloat(row[6]),
-              pm10: parseFloat(row[7]),
-              wind: parseFloat(row[8]),
-              gas: parseFloat(row[10]),
-              lluvia: parseFloat(row[11])
+              fecha: row[0]?.split(' ')[1] || '', // solo la hora
+              temp: parseFloat(row[1]),
+              hum: parseFloat(row[2])
             })).filter(row => row.fecha && !isNaN(row.temp));
 
-            if (data.length === 0) return;
+            if (data.length === 0) {
+              console.error("❌ No se encontraron datos válidos");
+              return;
+            }
 
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
+            // Tomar solo los últimos 50 puntos
+            const recentData = data.slice(-50);
 
-            if (lastWeekData.length === 0) return;
-
-            createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
-            createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
-            createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56');
-            createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0');
-            createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF');
-            createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD');
-            createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C');
+            // Crear gráfico
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            new Chart(ctx, {
+              type: 'line',
+               {
+                labels: recentData.map(d => d.fecha),
+                datasets: [
+                  {
+                    label: 'Temperatura (°C)',
+                     recentData.map(d => d.temp),
+                    borderColor: '#FF6384',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 3
+                  },
+                  {
+                    label: 'Humedad (%)',
+                     recentData.map(d => d.hum),
+                    borderColor: '#36A2EB',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 3
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  x: { title: { display: true, text: 'Hora' } },
+                  y: { beginAtZero: false, title: { display: true, text: 'Valor' } }
+                },
+                plugins: {
+                  legend: { position: 'top' },
+                  tooltip: { mode: 'index', intersect: false }
+                }
+              }
+            });
 
           } catch (error) {
-            console.error("❌ Error procesando datos:", error);
+            console.error("❌ Error al procesar datos:", error);
           }
+        },
+        error: function(error) {
+          console.error("❌ Error al cargar CSV:", error);
         }
       });
-
-      function createChart(canvasId, label, data, field, color) {
-        const ctx = document.getElementById(canvasId)?.getContext('2d');
-        if (!ctx) return;
-
-        new Chart(ctx, {
-          type: 'line',
-           {
-            labels: data.map(d => d.fecha),
-            datasets: [{
-              label: label,
-              data: data.map(d => d[field] || null), // ✅ Corregido: 'data:'
-              borderColor: color,
-              backgroundColor: color + '40',
-              borderWidth: 3,
-              tension: 0.3,
-              pointRadius: 3
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: { title: { display: true, text: 'Fecha' } },
-              y: { beginAtZero: false, title: { display: true, text: label } }
-            }
-          }
-        });
-      }
     });
   </script>
 </body>

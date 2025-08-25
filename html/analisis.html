@@ -100,7 +100,7 @@
             const ctx = document.getElementById('mainChart').getContext('2d');
             new Chart(ctx, {
               type: 'line',
-               {
+               data:{
                 labels: recentData.map(d => d.fecha),
                 datasets: [
                   {

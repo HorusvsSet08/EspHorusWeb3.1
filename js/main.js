@@ -2,6 +2,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const checkbox = document.querySelector(".theme-switch__checkbox");
+  let charts = []; // Almacenará todas las instancias de Chart
 
   if (!body) return;
 
@@ -17,6 +18,17 @@ document.addEventListener("DOMContentLoaded", () => {
     body.classList.toggle("light-mode", !isDarkMode);
     localStorage.setItem("darkMode", isDarkMode);
     updateVisualEffects(isDarkMode);
+    
+    // Actualizar los gráficos si estamos en la página de análisis
+    if (window.location.pathname.includes('analisis.html')) {
+      setTimeout(() => {
+        charts.forEach(chart => {
+          if (chart && typeof chart.update === 'function') {
+            chart.update();
+          }
+        });
+      }, 100); // Pequeño retraso para asegurar que el tema ya se aplicó
+    }
   }
 
   function updateVisualEffects(isDarkMode) {
@@ -71,4 +83,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Inicializar efectos ===
   setTheme(isDark);
+  
+  // Si estamos en la página de análisis, guarda las instancias de Chart
+  if (window.location.pathname.includes('analisis.html')) {
+    window.saveChartInstances = (chart) => {
+      charts.push(chart);
+    };
+  }
 });

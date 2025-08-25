@@ -133,17 +133,18 @@
         }
       });
 
-      function createChart(canvasId, label, data, field, color) {
+      function createChart(canvasId, label, chartData, field, color) {
         const ctx = document.getElementById(canvasId)?.getContext('2d');
         if (!ctx) return;
 
+        // Renombramos la variable 'data' a 'chartData' para evitar conflictos
         new Chart(ctx, {
           type: 'line',
           data: {
-            labels: data.map(d => d.fecha),
+            labels: chartData.map(d => d.fecha),
             datasets: [{
               label: label,
-              data: data.map(d => d[field] || null),  // ✅ CORRECCIÓN: Aquí estaba el error
+              data: chartData.map(d => d[field] || null),
               borderColor: color,
               backgroundColor: color + '40',
               borderWidth: 3,

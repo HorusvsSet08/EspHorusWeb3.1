@@ -531,3 +531,40 @@ body.dark-mode footer a {
   -webkit-transform: translateY(-50%);
   transform: translateY(-50%);
 }
+
+/* === TRANSICIONES SINCRONIZADAS PARA ANALISIS.HTML === */
+/* Asegura que TODOS los elementos cambien de tema al mismo tiempo */
+body.analisis-page, 
+body.analisis-page * {
+  transition: background-color 0.3s ease, 
+               color 0.3s ease, 
+               border-color 0.3s ease, 
+               box-shadow 0.3s ease !important;
+  transition-property: background-color, color, border-color, box-shadow;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+/* Asegurar que los gráficos también tengan transición */
+body.analisis-page .chart-wrapper-full {
+  transition: background-color 0.3s ease, border-color 0.3s ease !important;
+}
+
+body.analisis-page.dark-mode .chart-wrapper-full {
+  transition: background-color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* Asegurar que el switch cambie al mismo tiempo */
+body.analisis-page .theme-switch__container,
+body.analisis-page .theme-switch__clouds,
+body.analisis-page .theme-switch__stars-container,
+body.analisis-page .theme-switch__circle-container,
+body.analisis-page .theme-switch__moon {
+  transition: all 0.3s ease !important;
+}
+
+/* Elimina cualquier transición adicional que pueda causar retrasos */
+body.analisis-page .particles, 
+body.analisis-page .rain {
+  transition: none !important;
+}

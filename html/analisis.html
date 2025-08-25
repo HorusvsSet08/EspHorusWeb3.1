@@ -9,7 +9,7 @@
   <script src="../js/PapaParse.js"></script>
   <script src="../js/chart.js"></script>
 </head>
-<body class="light-mode">
+<body class="light-mode analisis-page">
   <nav class="nav">
     <div class="nav-container">
       <div class="nav-buttons">
@@ -143,7 +143,7 @@
             labels: data.map(d => d.fecha),
             datasets: [{
               label: label,
-              data: data.map(d => d[field] || null),  // ✅ CORRECCIÓN: Aquí estaba el error (faltaba "data:")
+               data.map(d => d[field] || null),
               borderColor: color,
               backgroundColor: color + '40',
               borderWidth: 3,

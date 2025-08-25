@@ -50,13 +50,6 @@
     </div>
   </nav>
 
-  <!-- Estado de conexión -->
-  <div class="connection-status-small">
-    <span class="status-dot"></span>
-    <span class="status-text">Conectado</span>
-    <div class="last-update">última: ahora</div>
-  </div>
-
   <div class="container">
     <header>
       <h1>📊 Análisis Semanal de Datos</h1>
@@ -146,7 +139,7 @@
 
         new Chart(ctx, {
           type: 'line',
-          data: {  // ✅ CORRECCIÓN: Aquí estaba el error (faltaba "data:")
+          data: {
             labels: data.map(d => d.fecha),
             datasets: [{
               label: label,

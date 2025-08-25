@@ -93,7 +93,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
       let charts = [];
-
+  
       Papa.parse(sheetURL, {
         download: true,
         header: false,
@@ -111,15 +111,15 @@
               gas: parseFloat(row[10]),
               lluvia: parseFloat(row[11])
             })).filter(row => row.fecha && !isNaN(row.temp));
-
+  
             if (data.length === 0) return;
-
+  
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
             const lastWeekData = data.filter(row => new Date(row.fecha) >= oneWeekAgo);
-
+  
             if (lastWeekData.length === 0) return;
-
+  
             // Crea y guarda cada gráfico
             charts.push(createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384'));
             charts.push(createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB'));
@@ -137,18 +137,18 @@
           }
         }
       });
-
+  
       function createChart(canvasId, label, chartData, field, color) {
         const ctx = document.getElementById(canvasId)?.getContext('2d');
         if (!ctx) return null;
-
+  
         return new Chart(ctx, {
           type: 'line',
-           {
+          data: {  // ✅ CORRECCIÓN 1: Agregado "data:"
             labels: chartData.map(d => d.fecha),
             datasets: [{
               label: label,
-               chartData.map(d => d[field] || null),
+              data: chartData.map(d => d[field] || null),  // ✅ CORRECCIÓN 2: Agregado "data:"
               borderColor: color,
               backgroundColor: color + '40',
               borderWidth: 3,
@@ -172,52 +172,36 @@
         });
       }
       
-      // Función para actualizar los gráficos de forma INMEDIATA
+      // Función para actualizar los gráficos
       window.updateCharts = () => {
         if (!charts || charts.length === 0) return;
         
-        // 1. Forzar un reflow para asegurar que los estilos CSS se aplican primero
-        document.body.offsetHeight;
-        
-        // 2. Actualizar cada gráfico con doble llamada para forzar redibujo inmediato
+        // Eliminar y recrear los gráficos para forzar un cambio inmediato
         charts.forEach(chart => {
-          if (chart && chart.update) {
-            // Primera actualización para aplicar cambios de estilo
-            chart.update(0);
-            
-            // Segunda actualización inmediata con requestAnimationFrame para sincronizar con renderizado
-            requestAnimationFrame(() => {
-              chart.update(0);
-              
-              // 3. Forzar redibujo del canvas
-              if (chart.canvas) {
-                const ctx = chart.canvas.getContext('2d');
-                if (ctx) {
-                  // Guardar estado actual
-                  ctx.save();
-                  // Restaurar estado, forzando un redibujo
-                  ctx.restore();
-                }
-              }
-            });
+          if (chart && chart.destroy) {
+            chart.destroy();
           }
         });
+        
+        // Limpiar el array
+        charts = [];
+        
+        // Volver a crear los gráficos
+        const dataElements = document.querySelectorAll('[data-chart-data]');
+        if (dataElements.length > 0) {
+          const data = JSON.parse(dataElements[0].dataset.chartData);
+          
+          charts.push(createChart('tempChart', 'Temperatura (°C)', data, 'temp', '#FF6384'));
+          charts.push(createChart('humChart', 'Humedad (%)', data, 'hum', '#36A2EB'));
+          charts.push(createChart('pressChart', 'Presión (hPa)', data, 'pres', '#FFCE56'));
+          charts.push(createChart('pm25Chart', 'PM2.5 (µg/m³)', data, 'pm25', '#4BC0C0'));
+          charts.push(createChart('windChart', 'Viento (km/h)', data, 'wind', '#C9CBCF'));
+          charts.push(createChart('rainChart', 'Lluvia (mm)', data, 'lluvia', '#46BFBD'));
+          charts.push(createChart('gasChart', 'Resistencia de Gas (kΩ)', data, 'gas', '#FDB45C'));
+        }
+        
+        window.chartInstances = charts;
       };
-      
-      // Escuchar cambios en el tema
-      const observer = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-          if (mutation.attributeName === 'class') {
-            // Esperar un pequeño retraso para asegurar que los estilos CSS se aplicaron
-            setTimeout(window.updateCharts, 10);
-          }
-        });
-      });
-      
-      observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ['class']
-      });
     });
   </script>
 </body>

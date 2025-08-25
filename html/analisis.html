@@ -143,7 +143,7 @@
             labels: data.map(d => d.fecha),
             datasets: [{
               label: label,
-               data.map(d => d[field] || null),
+              data: data.map(d => d[field] || null),  // ✅ CORRECCIÓN: Aquí estaba el error
               borderColor: color,
               backgroundColor: color + '40',
               borderWidth: 3,

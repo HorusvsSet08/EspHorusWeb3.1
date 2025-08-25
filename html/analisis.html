@@ -144,11 +144,11 @@
 
         return new Chart(ctx, {
           type: 'line',
-           {
+          data: {  // ✅ CORRECCIÓN: Aquí estaba el error (faltaba "data:")
             labels: chartData.map(d => d.fecha),
             datasets: [{
               label: label,
-               chartData.map(d => d[field] || null),
+              data: chartData.map(d => d[field] || null),  // ✅ CORRECCIÓN: Aquí estaba el error (faltaba "data:")
               borderColor: color,
               backgroundColor: color + '40',
               borderWidth: 3,

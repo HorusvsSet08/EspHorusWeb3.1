@@ -144,11 +144,11 @@
 
         return new Chart(ctx, {
           type: 'line',
-          data: {  // ✅ CORRECCIÓN: Aquí estaba el error (faltaba "data:")
+           {
             labels: chartData.map(d => d.fecha),
             datasets: [{
               label: label,
-              data: chartData.map(d => d[field] || null),  // ✅ CORRECCIÓN: Aquí estaba el error (faltaba "data:")
+               chartData.map(d => d[field] || null),
               borderColor: color,
               backgroundColor: color + '40',
               borderWidth: 3,
@@ -172,36 +172,52 @@
         });
       }
       
-      // Función para actualizar los gráficos
+      // Función para actualizar los gráficos de forma INMEDIATA
       window.updateCharts = () => {
         if (!charts || charts.length === 0) return;
         
-        // Eliminar y recrear los gráficos para forzar un cambio inmediato
+        // 1. Forzar un reflow para asegurar que los estilos CSS se aplican primero
+        document.body.offsetHeight;
+        
+        // 2. Actualizar cada gráfico con doble llamada para forzar redibujo inmediato
         charts.forEach(chart => {
-          if (chart && chart.destroy) {
-            chart.destroy();
+          if (chart && chart.update) {
+            // Primera actualización para aplicar cambios de estilo
+            chart.update(0);
+            
+            // Segunda actualización inmediata con requestAnimationFrame para sincronizar con renderizado
+            requestAnimationFrame(() => {
+              chart.update(0);
+              
+              // 3. Forzar redibujo del canvas
+              if (chart.canvas) {
+                const ctx = chart.canvas.getContext('2d');
+                if (ctx) {
+                  // Guardar estado actual
+                  ctx.save();
+                  // Restaurar estado, forzando un redibujo
+                  ctx.restore();
+                }
+              }
+            });
           }
         });
-        
-        // Limpiar el array
-        charts = [];
-        
-        // Volver a crear los gráficos
-        const dataElements = document.querySelectorAll('[data-chart-data]');
-        if (dataElements.length > 0) {
-          const data = JSON.parse(dataElements[0].dataset.chartData);
-          
-          charts.push(createChart('tempChart', 'Temperatura (°C)', data, 'temp', '#FF6384'));
-          charts.push(createChart('humChart', 'Humedad (%)', data, 'hum', '#36A2EB'));
-          charts.push(createChart('pressChart', 'Presión (hPa)', data, 'pres', '#FFCE56'));
-          charts.push(createChart('pm25Chart', 'PM2.5 (µg/m³)', data, 'pm25', '#4BC0C0'));
-          charts.push(createChart('windChart', 'Viento (km/h)', data, 'wind', '#C9CBCF'));
-          charts.push(createChart('rainChart', 'Lluvia (mm)', data, 'lluvia', '#46BFBD'));
-          charts.push(createChart('gasChart', 'Resistencia de Gas (kΩ)', data, 'gas', '#FDB45C'));
-        }
-        
-        window.chartInstances = charts;
       };
+      
+      // Escuchar cambios en el tema
+      const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          if (mutation.attributeName === 'class') {
+            // Esperar un pequeño retraso para asegurar que los estilos CSS se aplicaron
+            setTimeout(window.updateCharts, 10);
+          }
+        });
+      });
+      
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
     });
   </script>
 </body>

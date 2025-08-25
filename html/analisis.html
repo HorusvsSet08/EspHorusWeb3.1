@@ -92,6 +92,7 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWCl1SexRqaXBFHYwWMLz2NjeZ0JlHmSRa2Ia_XUz974vGK8a74QgBqfhZRGxKkEzDGn1JdD1sDLpq/pub?gid=0&single=true&output=csv";
+      let charts = [];
 
       Papa.parse(sheetURL, {
         download: true,
@@ -119,14 +120,15 @@
 
             if (lastWeekData.length === 0) return;
 
-            createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384');
-            createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB');
-            createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56');
-            createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0');
-            createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF');
-            createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD');
-            createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C');
-
+            // Crea y guarda cada gráfico
+            charts.push(createChart('tempChart', 'Temperatura (°C)', lastWeekData, 'temp', '#FF6384'));
+            charts.push(createChart('humChart', 'Humedad (%)', lastWeekData, 'hum', '#36A2EB'));
+            charts.push(createChart('pressChart', 'Presión (hPa)', lastWeekData, 'pres', '#FFCE56'));
+            charts.push(createChart('pm25Chart', 'PM2.5 (µg/m³)', lastWeekData, 'pm25', '#4BC0C0'));
+            charts.push(createChart('windChart', 'Viento (km/h)', lastWeekData, 'wind', '#C9CBCF'));
+            charts.push(createChart('rainChart', 'Lluvia (mm)', lastWeekData, 'lluvia', '#46BFBD'));
+            charts.push(createChart('gasChart', 'Resistencia de Gas (kΩ)', lastWeekData, 'gas', '#FDB45C'));
+            
           } catch (error) {
             console.error("❌ Error procesando datos:", error);
           }
@@ -135,10 +137,15 @@
 
       function createChart(canvasId, label, chartData, field, color) {
         const ctx = document.getElementById(canvasId)?.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) return null;
 
-        // Renombramos la variable 'data' a 'chartData' para evitar conflictos
-        new Chart(ctx, {
+        // Configuración de colores dinámicos según el tema
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const backgroundColor = isDarkMode ? 'rgba(20, 30, 45, 0.9)' : 'rgba(255, 255, 255, 0.95)';
+        const borderColor = isDarkMode ? 'rgba(93, 173, 226, 0.3)' : '#ddd';
+        const textColor = isDarkMode ? '#e0e0e0' : '#333';
+
+        return new Chart(ctx, {
           type: 'line',
           data: {
             labels: chartData.map(d => d.fecha),
@@ -155,13 +162,42 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            backgroundColor: backgroundColor,
+            borderColor: borderColor,
             scales: {
-              x: { title: { display: true, text: 'Fecha' } },
-              y: { beginAtZero: false, title: { display: true, text: label } }
+              x: { 
+                title: { display: true, text: 'Fecha', color: textColor },
+                grid: {
+                  color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                  color: textColor
+                }
+              },
+              y: { 
+                beginAtZero: false, 
+                title: { display: true, text: label, color: textColor },
+                grid: {
+                  color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                  color: textColor
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: textColor
+                }
+              }
             }
           }
         });
       }
+
+      // Hacer disponible para main.js
+      window.saveChartInstances = () => charts;
     });
   </script>
 </body>

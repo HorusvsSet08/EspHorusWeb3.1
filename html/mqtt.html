@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Datos en Vivo - Horus</title>
   <link rel="stylesheet" href="../css/style.css" />
-  <!-- Carga MQTT.js desde CDN (versión garantizada) -->
-  <script src="https://unpkg.com/mqtt@4.3.4/dist/mqtt.min.js"></script>
+  <!-- Carga librerías locales -->
+  <script src="../js/mqtt.js"></script>
+  <script src="../js/chart.js"></script>
+  <script src="../js/PapaParse.js"></script>
 </head>
 <body class="light-mode">
   <nav class="nav">
@@ -51,238 +53,309 @@
 
   <!-- Estado de conexión -->
   <div class="connection-status-small">
-    <span class="status-dot"></span>
-    <span class="status-text">Conectando...</span>
-    <div class="last-update">última: nunca</div>
+    <span class="status-dot" id="mqtt-status"></span>
+    <span class="status-text" id="mqtt-status-text">Conectando...</span>
+    <div class="last-update">última: <span id="last-update-time">nunca</span></div>
   </div>
 
   <div class="container">
     <header>
-      <h1>📡 Datos en Vivo - Estación Horus</h1>
+      <h1>📡 Datos en Vivo de la Estación Horus</h1>
+      <p>Monitoreo en tiempo real de los sensores meteorológicos</p>
     </header>
 
-    <div id="weather-data">
-      <div class="data-card">
-        <span>🌡️ Temperatura</span>
-        <strong id="temp">-- °C</strong>
+    <main id="data-container">
+      <div class="data-grid">
+        <div class="data-card">
+          <div class="data-icon">
+            <img src="../images/icons/weather/temperature.png" alt="Temperatura">
+          </div>
+          <div class="data-value">
+            <span id="temp-value">--</span>°C
+          </div>
+          <div class="data-label">Temperatura</div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-icon">
+            <img src="../images/icons/weather/humidity.png" alt="Humedad">
+          </div>
+          <div class="data-value">
+            <span id="hum-value">--</span>%
+          </div>
+          <div class="data-label">Humedad</div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-icon">
+            <img src="../images/icons/weather/pressure.png" alt="Presión">
+          </div>
+          <div class="data-value">
+            <span id="pres-value">--</span>hPa
+          </div>
+          <div class="data-label">Presión</div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 17H2v-2h20v2zm0-6H2v-2h20v2zm0-6H2v-2h20v2z"></path>
+            </svg>
+          </div>
+          <div class="data-value">
+            <span id="pm25-value">--</span>µg/m³
+          </div>
+          <div class="data-label">PM2.5</div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 17H2v-2h20v2zm0-6H2v-2h20v2zm0-6H2v-2h20v2z"></path>
+            </svg>
+          </div>
+          <div class="data-value">
+            <span id="wind-value">--</span>km/h
+          </div>
+          <div class="data-label">Viento</div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 17H2v-2h20v2zm0-6H2v-2h20v2zm0-6H2v-2h20v2z"></path>
+            </svg>
+          </div>
+          <div class="data-value">
+            <span id="gas-value">--</span>kΩ
+          </div>
+          <div class="data-label">Gas</div>
+        </div>
       </div>
-      <div class="data-card">
-        <span>💧 Humedad</span>
-        <strong id="hum">-- %</strong>
+
+      <div class="chart-section">
+        <h2>📈 Datos en Tiempo Real</h2>
+        <div class="chart-wrapper-full">
+          <canvas id="realtimeChart"></canvas>
+        </div>
       </div>
-      <div class="data-card">
-        <span>🔽 Presión</span>
-        <strong id="press">-- hPa</strong>
-      </div>
-      <div class="data-card">
-        <span>⛰️ Altitud</span>
-        <strong id="alt">-- m</strong>
-      </div>
-      <div class="data-card">
-        <span>🌫️ PM2.5</span>
-        <strong id="pm25">-- µg/m³</strong>
-      </div>
-      <div class="data-card">
-        <span>🌫️ PM10</span>
-        <strong id="pm10">-- µg/m³</strong>
-      </div>
-      <div class="data-card">
-        <span>💨 Viento</span>
-        <strong id="wind">-- km/h</strong>
-      </div>
-      <div class="data-card">
-        <span>🧭 Dirección</span>
-        <strong id="windDir">-- °</strong>
-      </div>
-      <div class="data-card">
-        <span>⛽ Gas</span>
-        <strong id="gas">-- kΩ</strong>
-      </div>
-      <div class="data-card">
-        <span>🌧️ Lluvia</span>
-        <strong id="lluvia">-- mm</strong>
-      </div>
-    </div>
+    </main>
 
     <footer>
-      <p>Estación Horus • Diseño y desarrollo por <strong>Tu Nombre</strong></p>
+      <p>Conexión MQTT establecida con <strong>horus-station</strong></p>
     </footer>
   </div>
 
-  <!-- Carga main.js primero (tema y efectos) -->
+  <!-- CARGA main.js AL FINAL: es CRÍTICO -->
   <script src="../js/main.js"></script>
-
-  <!-- Script de MQTT CORREGIDO -->
+  
+  <!-- Script de datos en vivo -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const statusText = document.querySelector('.status-text');
-      const lastUpdate = document.querySelector('.last-update');
-      let lastDataTime = null;
-      let mqttClient = null;
-
-      const updateLastUpdate = () => {
-        if (!lastDataTime) return;
-        const diff = Math.floor((Date.now() - lastDataTime) / 1000);
-        lastUpdate.textContent = `última: hace ${diff}s`;
-      };
-      setInterval(updateLastUpdate, 1000);
-
-      // === CONEXIÓN MQTT CORREGIDA ===
-      // CORRECCIÓN PRINCIPAL: HiveMQ usa el puerto 8000 para conexiones WebSocket (NO 8884)
-      const broker = "wss://broker.hivemq.com:8000/mqtt";
-      
-      // Función para crear el cliente MQTT con configuración correcta
-      const createMqttClient = () => {
-        const clientId = "horus_client_" + Math.random().toString(36).substr(2, 9);
-        
-        // Configuración específica para navegadores y HiveMQ
-        const options = {
-          clientId: clientId,
-          protocolVersion: 4,
-          clean: true,
-          connectTimeout: 60000, // Aumentado a 60 segundos para conexiones lentas
-          reconnectPeriod: 5000,
-          rejectUnauthorized: false,
-          // Configuración crítica para HiveMQ en navegadores:
-          protocols: ['mqtt'],
-          properties: {
-            requestProblemInformation: true
+      // Variables globales
+      const MAX_POINTS = 50;
+      let chartData = {
+        labels: [],
+        datasets: [
+          {
+            label: 'Temperatura (°C)',
+            data: [],
+            borderColor: '#FF6384',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 3
           },
-          reconnectOnConnackError: true,
-          // Implementación personalizada para crear el WebSocket con el subprotocolo correcto
-          createWebsocket: (url, protocols, options) => {
-            console.log("[Horus] Creando WebSocket con subprotocolo: mqtt");
-            return new WebSocket(url, 'mqtt');
+          {
+            label: 'Humedad (%)',
+            data: [],
+            borderColor: '#36A2EB',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 3
+          },
+          {
+            label: 'Presión (hPa)',
+            data: [],
+            borderColor: '#FFCE56',
+            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 3
           }
-        };
-
-        // Crear y devolver el cliente MQTT
-        return mqtt.connect(broker, options);
+        ]
       };
 
-      // Iniciar la conexión
-      const connectToMqtt = () => {
-        console.log("[Horus | " + new Date().toLocaleTimeString() + "] ℹ️ Intentando conectar a " + broker);
-        
-        // Limpiar cliente anterior si existe
-        if (mqttClient) {
-          try {
-            mqttClient.end();
-          } catch (e) {
-            // Ignorar errores al cerrar cliente anterior
-          }
-          mqttClient = null;
-        }
-        
-        // Crear nuevo cliente
-        mqttClient = createMqttClient();
-        
-        // Manejar eventos
-        mqttClient.on("connect", () => {
-          console.log("[Horus | " + new Date().toLocaleTimeString() + "] ✅ Conectado al broker");
-          statusText.textContent = "Conectado";
-          document.querySelector('.connection-status-small').classList.add('connected');
-          document.querySelector('.connection-status-small').classList.remove('error');
+      // Elementos del DOM
+      const tempValue = document.getElementById('temp-value');
+      const humValue = document.getElementById('hum-value');
+      const presValue = document.getElementById('pres-value');
+      const pm25Value = document.getElementById('pm25-value');
+      const windValue = document.getElementById('wind-value');
+      const gasValue = document.getElementById('gas-value');
+      const lastUpdateTime = document.getElementById('last-update-time');
+      const mqttStatus = document.getElementById('mqtt-status');
+      const mqttStatusText = document.getElementById('mqtt-status-text');
 
-          // Suscribirse a todos los tópicos de Horus
-          mqttClient.subscribe("horus/#", (err) => {
-            if (err) {
-              console.error("[Horus | " + new Date().toLocaleTimeString() + "] ❌ Error al suscribirse a horus/#");
-            } else {
-              console.log("[Horus | " + new Date().toLocaleTimeString() + "] 🔍 Suscrito a horus/# (todos los tópicos)");
+      // Configuración del gráfico
+      const ctx = document.getElementById('realtimeChart')?.getContext('2d');
+      let chart = null;
+      
+      if (ctx) {
+        chart = new Chart(ctx, {
+          type: 'line',
+           {
+            labels: chartData.labels,
+            datasets: chartData.datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { title: { display: true, text: 'Tiempo' } },
+              y: { beginAtZero: false, title: { display: true, text: 'Valor' } }
+            },
+            plugins: {
+              legend: { position: 'top' },
+              tooltip: { mode: 'index', intersect: false }
+            }
+          }
+        });
+      }
+
+      // Configuración MQTT
+      const MQTT_CONFIG = {
+        host: 'broker.hivemq.com',
+        port: 8000,
+        clientId: 'horus-web-client-' + Math.random().toString(16).substr(2, 8),
+        topic: 'horus/station/data'
+      };
+
+      // Estado de conexión
+      let isConnected = false;
+      let client = null;
+
+      // Función para actualizar el estado de conexión
+      function updateConnectionStatus(connected, message) {
+        isConnected = connected;
+        mqttStatus.className = connected ? 'status-dot status-connected' : 'status-dot status-disconnected';
+        mqttStatusText.textContent = connected ? 'Conectado' : 'Desconectado';
+        mqttStatusText.style.color = connected ? '#4CAF50' : '#F44336';
+        
+        if (connected) {
+          console.log('✅ Conexión MQTT establecida');
+        } else {
+          console.log('❌ Conexión MQTT perdida:', message || 'Desconocido');
+          setTimeout(connectMQTT, 5000); // Intentar reconectar después de 5 segundos
+        }
+      }
+
+      // Función para actualizar los datos en pantalla
+      function updateData(data) {
+        // Actualizar valores individuales
+        tempValue.textContent = data.temp ? data.temp.toFixed(2) : '--';
+        humValue.textContent = data.hum ? data.hum.toFixed(2) : '--';
+        presValue.textContent = data.pres ? data.pres.toFixed(2) : '--';
+        pm25Value.textContent = data.pm25 ? data.pm25.toFixed(2) : '--';
+        windValue.textContent = data.wind ? data.wind.toFixed(2) : '--';
+        gasValue.textContent = data.gas ? data.gas.toFixed(2) : '--';
+        
+        // Actualizar tiempo de última actualización
+        const now = new Date();
+        lastUpdateTime.textContent = now.toLocaleTimeString();
+        
+        // Actualizar gráfico
+        if (chart) {
+          // Agregar nuevos datos
+          chartData.labels.push(now.toLocaleTimeString());
+          chartData.datasets[0].data.push(data.temp || null);
+          chartData.datasets[1].data.push(data.hum || null);
+          chartData.datasets[2].data.push(data.pres || null);
+          
+          // Mantener solo los últimos MAX_POINTS puntos
+          if (chartData.labels.length > MAX_POINTS) {
+            chartData.labels.shift();
+            chartData.datasets[0].data.shift();
+            chartData.datasets[1].data.shift();
+            chartData.datasets[2].data.shift();
+          }
+          
+          // Actualizar gráfico
+          chart.update();
+        }
+      }
+
+      // Conectar a MQTT
+      function connectMQTT() {
+        try {
+          // Si ya hay una conexión, desconectar primero
+          if (client && client.connected) {
+            client.end();
+          }
+          
+          // Crear nuevo cliente
+          client = mqtt.connect(`ws://${MQTT_CONFIG.host}:${MQTT_CONFIG.port}`);
+          
+          // Manejar eventos
+          client.on('connect', () => {
+            console.log(`✅ Conectado a MQTT broker: ${MQTT_CONFIG.host}:${MQTT_CONFIG.port}`);
+            client.subscribe(MQTT_CONFIG.topic, (err) => {
+              if (!err) {
+                console.log(`✅ Subscrito al tópico: ${MQTT_CONFIG.topic}`);
+                updateConnectionStatus(true);
+              }
+            });
+          });
+          
+          client.on('message', (topic, message) => {
+            try {
+              const data = JSON.parse(message.toString());
+              console.log('📦 Datos recibidos:', data);
+              updateData(data);
+            } catch (e) {
+              console.error('❌ Error al procesar mensaje:', e);
             }
           });
-        });
-
-        mqttClient.on("message", (topic, payload) => {
-          const value = payload.toString().trim();
-          if (!value) return;
-
-          // Log para ver TODO lo que llega
-          console.log("[Horus | " + new Date().toLocaleTimeString() + "] 📩 Tópico:", topic);
-          console.log("[Horus | " + new Date().toLocaleTimeString() + "] 📦 Valor:", value);
-
-          // Actualiza el tiempo de última recepción
-          lastDataTime = Date.now();
-
-          // Mapeo de tópicos a IDs (ajusta según tu ESP)
-          const map = {
-            "horus/vvb/temperatura": "temp",
-            "horus/vvb/humedad": "hum",
-            "horus/vvb/presion": "press",
-            "horus/vvb/altitud": "alt",
-            "horus/vvb/pm25": "pm25",
-            "horus/vvb/pm10": "pm10",
-            "horus/vvb/wind_speed": "wind",
-            "horus/vvb/wind_direction": "windDir",
-            "horus/vvb/gas": "gas",
-            "horus/vvb/lluvia": "lluvia"
-          };
-
-          const id = map[topic];
-          if (!id) {
-            // Intentar coincidencias parciales
-            const partialMatch = Object.keys(map).find(key => topic.includes(key));
-            if (partialMatch) {
-              console.log("[Horus | " + new Date().toLocaleTimeString() + "] ⚠️ Tópico parcialmente mapeado:", topic, "->", map[partialMatch]);
-              id = map[partialMatch];
-            } else {
-              console.warn("[Horus | " + new Date().toLocaleTimeString() + "] ⚠️ Tópico no mapeado:", topic);
-              return;
-            }
-          }
-
-          const el = document.getElementById(id);
-          if (!el) {
-            console.error("[Horus | " + new Date().toLocaleTimeString() + "] ❌ Elemento no encontrado para ID:", id);
-            return;
-          }
-
-          // Unidades
-          const unit = {
-            temp: "°C",
-            press: "hPa",
-            wind: "km/h",
-            windDir: "°",
-            gas: "kΩ",
-            lluvia: "mm"
-          }[id] || "";
-
-          // Formatear valor si es numérico
-          const formattedValue = isNaN(value) ? value : parseFloat(value).toFixed(2);
           
-          el.textContent = `${formattedValue} ${unit}`.trim();
-        });
-
-        mqttClient.on("error", (err) => {
-          console.error("[Horus | " + new Date().toLocaleTimeString() + "] ❌ Error MQTT:", err);
-          statusText.textContent = "Error de conexión";
-          document.querySelector('.connection-status-small').classList.remove('connected');
-          document.querySelector('.connection-status-small').classList.add('error');
+          client.on('error', (error) => {
+            console.error('❌ Error de conexión MQTT:', error);
+            updateConnectionStatus(false, error.message);
+          });
           
-          // Intentar reconectar después de un tiempo
-          setTimeout(() => {
-            console.log("[Horus | " + new Date().toLocaleTimeString() + "] ℹ️ Intentando reconectar...");
-            connectToMqtt();
-          }, 5000);
-        });
-
-        mqttClient.on("close", () => {
-          console.log("[Horus | " + new Date().toLocaleTimeString() + "] ℹ️ Conexión cerrada");
-          statusText.textContent = "Desconectado";
-          document.querySelector('.connection-status-small').classList.remove('connected');
-          document.querySelector('.connection-status-small').classList.remove('error');
+          client.on('close', () => {
+            console.log('🔌 Conexión MQTT cerrada');
+            updateConnectionStatus(false, 'Conexión cerrada');
+          });
           
-          // Intentar reconectar automáticamente
-          setTimeout(() => {
-            console.log("[Horus | " + new Date().toLocaleTimeString() + "] ℹ️ Intentando reconectar...");
-            connectToMqtt();
-          }, 5000);
-        });
-      };
+          client.on('reconnect', () => {
+            console.log('🔄 Reconectando a MQTT...');
+            updateConnectionStatus(false, 'Reconectando...');
+          });
+        } catch (error) {
+          console.error('❌ Error al crear cliente MQTT:', error);
+          updateConnectionStatus(false, error.message);
+        }
+      }
 
-      // Iniciar la conexión MQTT
-      connectToMqtt();
+      // Iniciar conexión MQTT
+      connectMQTT();
+
+      // Simulación de datos para desarrollo (opcional)
+      // Descomenta para probar sin conexión MQTT real
+      /*
+      setInterval(() => {
+        const simulatedData = {
+          temp: 25 + Math.random() * 10,
+          hum: 40 + Math.random() * 30,
+          pres: 1013 + Math.random() * 5,
+          pm25: 5 + Math.random() * 20,
+          wind: 2 + Math.random() * 8,
+          gas: 10 + Math.random() * 5
+        };
+        updateData(simulatedData);
+      }, 2000);
+      */
     });
   </script>
 </body>
